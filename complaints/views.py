@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 
+from django.http import JsonResponse
+
 # Create your views here.
 
 def home(request):
@@ -101,3 +103,43 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+# API endpoint for mapdata
+def complaints_map_data(request):
+    complaints = Complaint.objects.exclude(
+        latitude=None
+    ).exclude(longitude=None)
+    
+    data = []
+    for c in complaints:
+        data.append({
+            'id': c.id,
+            'title': c.title,
+            'description': c.description,
+            'category': c.get_category_display(),
+            'status': c.get_status_display(),
+            'ward': str(c.ward),
+            'user': c.user.username,
+            'upvotes': Upvote.objects.filter(complaint=c).count(),
+            'lat': c.latitude,
+            'lng': c.longitude,
+        })
+    
+    return JsonResponse({'complaints': data})
+
+def map_view(request):
+    return render(request, 'map.html')
+
+# Complaint detail view
+def complaint_detail(request, complaint_id):
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+    upvotes = Upvote.objects.filter(complaint=complaint).count()
+    user_upvoted = False
+    if request.user.is_authenticated:
+        user_upvoted = Upvote.objects.filter(user=request.user, complaint=complaint).exists()
+
+    return render(request, 'complaint_detail.html', {
+        'complaint': complaint,
+        'upvotes': upvotes,
+        'user_upvoted': user_upvoted,
+    })

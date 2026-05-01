@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2>
+        <span data-en>Complaints Map</span>
+        <span data-np>समस्या नक्सा</span>
+    </h2>
+    <a href="/" class="btn btn-outline">
+        <span data-en>← List View</span>
+        <span data-np>← सूची हेर्नुस्</span>
+    </a>
+</div>
+
+<!-- Map Container -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div id="map" style="height:550px; width:100%;"></div>
+</div>
+
+<!-- Category Legend -->
+<div class="card" style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
+    <strong>
+        <span data-en>Legend:</span>
+        <span data-np>संकेत:</span>
+    </strong>
+    <span>🔵 <span data-en>Water</span><span data-np>पानी</span></span>
+    <span>🟤 <span data-en>Road</span><span data-np>बाटो</span></span>
+    <span>🟡 <span data-en>Electricity</span><span data-np>बिजुली</span></span>
+    <span>🟢 <span data-en>Waste</span><span data-np>फोहोर</span></span>
+    <span>⚫ <span data-en>Other</span><span data-np>अरु</span></span>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Kathmandu center ma map initialize gar
+    const map = L.map('map').setView([27.7172, 85.3240], 13);
+
+    // OpenStreetMap tiles — free!
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Category colors
+    const categoryColors = {
+        'Khane Pani': 'blue',
+        'Bato': 'brown', 
+        'Bijuli': 'orange',
+        'Fohor': 'green',
+        'Aru': 'gray',
+    };
+
+    // API bata complaints fetch gar
+    fetch('/api/map-data/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.complaints.length === 0) {
+                document.getElementById('map').insertAdjacentHTML(
+                    'afterend',
+                    '<p style="text-align:center; color:#999; margin-top:1rem;">No complaints with location yet.</p>'
+                );
+                return;
+            }
+
+            data.complaints.forEach(c => {
+                const color = categoryColors[c.category] || 'gray';
+
+                // Custom colored marker
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        background:${color};
+                        width:14px; height:14px;
+                        border-radius:50%;
+                        border:2px solid white;
+                        box-shadow:0 1px 4px rgba(0,0,0,0.4);
+                    "></div>`,
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7],
+                });
+
+                const marker = L.marker([c.lat, c.lng], { icon }).addTo(map);
+
+                // Popup — click garda details dekhincha
+                marker.bindPopup(`
+                    <div style="min-width:180px;">
+                        <strong>${c.title}</strong><br>
+                        <span style="color:#888; font-size:0.85rem;">${c.category} • ${c.ward}</span><br>
+                        <p style="margin:0.5rem 0; font-size:0.9rem;">${c.description}</p>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#555;">
+                            <span>👤 ${c.user}</span>
+                            <span>👍 ${c.upvotes}</span>
+                            <span style="color:${c.status === 'Resolved' ? 'green' : 'orange'};">
+                                ${c.status}
+                            </span>
+                        </div>
+                    </div>
+                `);
+            });
+        });
+</script>
+
+{% endblock %}

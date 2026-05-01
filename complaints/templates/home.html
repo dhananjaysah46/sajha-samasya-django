@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+    <h2>
+        <span data-en>Community Complaints</span>
+        <span data-np>सामुदायिक समस्याहरू</span>
+    </h2>
+    {% if user.is_authenticated %}
+        <a href="/submit/" class="btn btn-primary">
+            <span data-en>+ Report Problem</span>
+            <span data-np>+ समस्या रिपोर्ट गर्नुस्</span>
+        </a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card" style="display:flex; gap:1rem; flex-wrap:wrap;">
+    <form method="GET" style="display:flex; gap:1rem; flex-wrap:wrap; width:100%;">
+        <select name="category" onchange="this.form.submit()" style="padding:0.5rem; border-radius:6px; border:1px solid #ddd;">
+            <option value="">
+                <span data-en>All Categories</span>
+            </option>
+            <option value="water" {% if request.GET.category == 'water' %}selected{% endif %}>Khane Pani / खाने पानी</option>
+            <option value="road" {% if request.GET.category == 'road' %}selected{% endif %}>Bato / बाटो</option>
+            <option value="electricity" {% if request.GET.category == 'electricity' %}selected{% endif %}>Bijuli / बिजुली</option>
+            <option value="waste" {% if request.GET.category == 'waste' %}selected{% endif %}>Fohor / फोहोर</option>
+            <option value="other" {% if request.GET.category == 'other' %}selected{% endif %}>Aru / अरु</option>
+        </select>
+
+        <select name="ward" onchange="this.form.submit()" style="padding:0.5rem; border-radius:6px; border:1px solid #ddd;">
+            <option value="">
+                All Wards / सबै वडा
+            </option>
+            {% for ward in wards %}
+                <option value="{{ ward.id }}" {% if request.GET.ward == ward.id|stringformat:"s" %}selected{% endif %}>
+                    {{ ward.municipality }} - Ward {{ ward.ward_number }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<!-- Complaints List -->
+{% for complaint in complaints %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div>
+            <span style="background:#fde; color:#c0392b; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.8rem;">
+                {{ complaint.get_category_display }}
+            </span>
+            <span style="background:#eee; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.8rem; margin-left:0.5rem;">
+                {{ complaint.get_status_display }}
+            </span>
+        </div>
+        <small style="color:#999;">{{ complaint.created_at|date:"M d, Y" }}</small>
+    </div>
+
+    <h3 style="margin:0.8rem 0 0.4rem;">{{ complaint.title }}</h3>
+    <p style="color:#666; font-size:0.95rem;">{{ complaint.description }}</p>
+    
+    {% if complaint.photo %}
+        <img src="{{ complaint.photo.url }}" style="width:100%; max-height:200px; object-fit:cover; border-radius:6px; margin-top:0.8rem;">
+    {% endif %}
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+        <small style="color:#888;">
+            📍 {{ complaint.ward.municipality }} - Ward {{ complaint.ward.ward_number }}
+            &nbsp;|&nbsp; 👤 {{ complaint.user.username }}
+        </small>
+        <a href="/upvote/{{ complaint.id }}/" class="btn btn-outline" style="font-size:0.85rem;">
+            👍 {{ complaint.upvote_set.count }}
+            <span data-en>Same problem</span>
+            <span data-np>मलाई पनि</span>
+        </a>
+    </div>
+</div>
+{% empty %}
+<div class="card" style="text-align:center; color:#999; padding:3rem;">
+    <p>
+        <span data-en>No complaints yet. Be the first to report!</span>
+        <span data-np>अहिलेसम्म कुनै समस्या छैन। पहिलो रिपोर्ट गर्नुस्!</span>
+    </p>
+</div>
+{% endfor %}
+
+{% endblock %}

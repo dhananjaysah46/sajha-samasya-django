@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sajha Samasya</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        nav {
+            background: #c0392b;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        nav .nav-links a {
+            margin-left: 1rem;
+            font-size: 0.95rem;
+            font-weight: normal;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+
+        .btn-primary { background: #c0392b; color: white; }
+        .btn-outline { background: transparent; border: 2px solid #c0392b; color: #c0392b; }
+        .btn:hover { opacity: 0.85; }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .error {
+            background: #fde;
+            color: #c0392b;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        /* Language toggle */
+        .lang-toggle {
+            background: white;
+            color: #c0392b;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+
+        [data-np] { display: none; }
+        body.nepali [data-en] { display: none; }
+        body.nepali [data-np] { display: inline; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">
+            <span data-en>Sajha Samasya</span>
+            <span data-np>साझा समस्या</span>
+        </a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <span>
+                    <span data-en>Hello,</span>
+                    <span data-np>नमस्ते,</span>
+                    {{ user.username }}
+                </span>
+                <a href="/submit/">
+                    <span data-en>+ Report</span>
+                    <span data-np>+ रिपोर्ट</span>
+                </a>
+                <a href="/logout/">
+                    <span data-en>Logout</span>
+                    <span data-np>बाहिर निस्कनुस्</span>
+                </a>
+            {% else %}
+                <a href="/login/">
+                    <span data-en>Login</span>
+                    <span data-np>लगइन</span>
+                </a>
+                <a href="/register/">
+                    <span data-en>Register</span>
+                    <span data-np>दर्ता</span>
+                </a>
+            {% endif %}
+            <button class="lang-toggle" onclick="toggleLang()">नेपाली</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        function toggleLang() {
+            document.body.classList.toggle('nepali');
+            const btn = document.querySelector('.lang-toggle');
+            btn.textContent = document.body.classList.contains('nepali') ? 'English' : 'नेपाली';
+            localStorage.setItem('lang', document.body.classList.contains('nepali') ? 'np' : 'en');
+        }
+
+        // Remember language preference
+        if (localStorage.getItem('lang') === 'np') {
+            document.body.classList.add('nepali');
+            document.querySelector('.lang-toggle').textContent = 'English';
+        }
+    </script>
+</body>
+</html>

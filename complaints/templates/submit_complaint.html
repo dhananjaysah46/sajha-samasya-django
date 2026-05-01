@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width:600px; margin:0 auto;">
+    <h2 style="margin-bottom:1.5rem;">
+        <span data-en>Report a Problem</span>
+        <span data-np>समस्या रिपोर्ट गर्नुस्</span>
+    </h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Title</span>
+                <span data-np>शीर्षक</span>
+            </label><br>
+            <input type="text" name="title" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Category</span>
+                <span data-np>वर्ग</span>
+            </label><br>
+            <select name="category" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+                <option value="water">Khane Pani / खाने पानी</option>
+                <option value="road">Bato / बाटो</option>
+                <option value="electricity">Bijuli / बिजुली</option>
+                <option value="waste">Fohor / फोहोर</option>
+                <option value="other">Aru / अरु</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Ward</span>
+                <span data-np>वडा</span>
+            </label><br>
+            <select name="ward" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+                {% for ward in wards %}
+                    <option value="{{ ward.id }}">{{ ward.municipality }} - Ward {{ ward.ward_number }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Description</span>
+                <span data-np>विवरण</span>
+            </label><br>
+            <textarea name="description" rows="4" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;"></textarea>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Photo (optional)</span>
+                <span data-np>फोटो (ऐच्छिक)</span>
+            </label><br>
+            <input type="file" name="photo" accept="image/*"
+                style="margin-top:0.3rem;">
+        </div>
+
+        <!-- Hidden GPS fields — auto fill huncha -->
+        <input type="hidden" name="latitude" id="lat">
+        <input type="hidden" name="longitude" id="lng">
+
+        <button type="button" onclick="getLocation()" class="btn btn-outline" style="margin-bottom:1rem;">
+            📍
+            <span data-en>Get My Location</span>
+            <span data-np>मेरो स्थान पत्ता लगाउनुस्</span>
+        </button>
+        <span id="loc-status" style="font-size:0.85rem; color:#27ae60;"></span>
+
+        <br><br>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.8rem;">
+            <span data-en>Submit Report</span>
+            <span data-np>रिपोर्ट पेश गर्नुस्</span>
+        </button>
+    </form>
+</div>
+
+<script>
+function getLocation() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+        document.getElementById('lat').value = pos.coords.latitude;
+        document.getElementById('lng').value = pos.coords.longitude;
+        document.getElementById('loc-status').textContent = '✓ Location captured!';
+    }, () => {
+        document.getElementById('loc-status').textContent = 'Location access denied.';
+    });
+}
+</script>
+{% endblock %}

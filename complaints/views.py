@@ -1,10 +1,15 @@
 from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Complaint, Ward, Upvote
+from .models import Complaint, Municipality, Ward, Upvote, Province, District, Municipality
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
+from django.db.models import Count
+from .serializers import ComplaintSerializer, WardSerializer, MunicipalitySerializer, DistrictSerializer, ProvinceSerializer
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
 
 from django.http import JsonResponse
 
@@ -50,13 +55,13 @@ def submit_complaint(request):
             ward=ward,
             user=request.user,
             photo=photo,
-            latitude=latitude,
-            longitude=longitude,
+            latitude=latitude or None,
+            longitude=longitude or None,
         )
         return redirect('home')
 
-    wards = Ward.objects.all()
-    return render(request, 'submit_complaint.html', {'wards': wards})
+    provinces = Province.objects.all()
+    return render(request, 'submit_complaint.html', {'provinces': provinces})
 
 @login_required
 def upvote_complaint(request, complaint_id):
@@ -142,4 +147,150 @@ def complaint_detail(request, complaint_id):
         'complaint': complaint,
         'upvotes': upvotes,
         'user_upvoted': user_upvoted,
+    })
+
+def get_districts(request):
+    province_id = request.GET.get('province_id')
+    districts = District.objects.filter(province_id=province_id).values('id', 'name', 'name_np')
+    return JsonResponse({'districts': list(districts)})
+
+def get_municipalities(request):
+    district_id = request.GET.get('district_id')
+    municipalities = Municipality.objects.filter(district_id=district_id).values('id', 'name', 'name_np', 'type')
+    return JsonResponse({'municipalities': list(municipalities)})
+
+def get_wards(request):
+    municipality_id = request.GET.get('municipality_id')
+    wards = Ward.objects.filter(municipality_id=municipality_id).values('id', 'ward_number').order_by('ward_number')
+    return JsonResponse({'wards': list(wards)})
+
+def dashboard(request):
+    # Total complaint stats
+    total_complaints = Complaint.objects.count()
+    open_complaints = Complaint.objects.filter(status='open').count()
+    resolved_complaints = Complaint.objects.filter(status='resolved').count()
+    total_upvotes = Upvote.objects.count()
+
+    # Complaints by category
+    category_stats = Complaint.objects.values('category').annotate(count=Count('id')).order_by('-count')
+
+    # Complaints by district
+    district_stats = Complaint.objects.values('ward__municipality__district__name').annotate(count=Count('id')).order_by('-count')[:10]  # Top 10 districts
+
+    #Most upvoted complaints
+    top_complaints = Complaint.objects.annotate(upvote_count=Count('upvotes')).order_by('-upvote_count')[:5]
+
+    # Recent complaints
+    recent_complaints = Complaint.objects.all().order_by('-created_at')[:5]
+
+    return render(request, 'dashboard.html', {
+        'total_complaints': total_complaints,
+        'open_complaints': open_complaints,
+        'resolved_complaints': resolved_complaints,
+        'total_upvotes': total_upvotes,
+        'category_stats': category_stats,
+        'district_stats': district_stats,
+        'top_complaints': top_complaints,
+        'recent_complaints': recent_complaints,
+    })
+
+# complaints - list + create
+class ComplaintListCreateAPI(generics.ListCreateAPIView):
+    serializer_class = ComplaintSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Complaint.objects.all().order_by('-created_at')
+
+        # Filtering by category
+        category = self.request.GET.get('category')
+        status = self.request.GET.get('status')
+        district = self.request.GET.get('district')
+        ward_id = self.request.GET.get('ward_id')
+
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        if status:
+            queryset = queryset.filter(status=status)
+
+        if district:
+            queryset = queryset.filter(ward__municipality__district__name__icontains=district)
+
+        if ward_id:
+            queryset = queryset.filter(ward_id=ward_id)
+
+        return queryset
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+# complaint detail - retrieve, update, delete
+class ComplaintDetailAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+# upvote API
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def upvote_api(request, pk):
+    complaint = Complaint.objects.get(pk=pk)
+    existing = Upvote.objects.filter(user=request.user, complaint=complaint)
+
+    if existing.exists():
+        existing.delete()  # Remove upvote
+        return Response({'status': 'removed', 'upvotes': Upvote.objects.filter(complaint=complaint).count()})
+    else:
+        Upvote.objects.create(user=request.user, complaint=complaint)  # Add upvote
+        return Response({'status': 'added', 'upvotes': Upvote.objects.filter(complaint=complaint).count()})
+    
+# Province list API
+class ProvinceListAPI(generics.ListAPIView):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
+
+# District list API
+class DistrictListAPI(generics.ListAPIView):
+    serializer_class = DistrictSerializer
+
+    def get_queryset(self):
+        province_id = self.request.query_params.get('province_id')
+        if province_id:
+            return District.objects.filter(province_id=province_id)
+        return District.objects.all()
+    
+# Municipality list API
+class MunicipalityListAPI(generics.ListAPIView):
+    serializer_class = MunicipalitySerializer
+
+    def get_queryset(self):
+        district_id = self.request.query_params.get('district_id')
+        if district_id:
+            return Municipality.objects.filter(district_id=district_id)
+        return Municipality.objects.all()
+    
+# Ward list API
+class WardListAPI(generics.ListAPIView):
+    serializer_class = WardSerializer
+
+    def get_queryset(self):
+        municipality_id = self.request.query_params.get('municipality_id')
+        if municipality_id:
+            return Ward.objects.filter(municipality_id=municipality_id)
+        return Ward.objects.all()
+# Stats API
+@api_view(['GET'])
+def stats_api(request):
+    category_stats = list(Complaint.objects.values('category').annotate(count=Count('id')))
+    district_stats = list(Complaint.objects.values('ward__municipality__district__name').annotate(count=Count('id')).order_by('-count')[:10])
+
+    return Response({
+        'total_complaints': Complaint.objects.count(),
+        'open': Complaint.objects.filter(status='open').count(),
+        'acknowledged': Complaint.objects.filter(status='acknowledged').count(),
+        'resolved': Complaint.objects.filter(status='resolved').count(),
+        'total_upvotes': Upvote.objects.count(),
+        'by_category': category_stats,
+        'top_districts': district_stats,
     })

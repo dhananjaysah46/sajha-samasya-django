@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 style="margin-bottom:1.5rem;">
+    📊 <span data-en>Dashboard</span><span data-np>ड्यासबोर्ड</span>
+</h2>
+
+<!-- Summary Cards -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1rem; margin-bottom:2rem;">
+
+    <div class="card" style="text-align:center; border-top:4px solid #c0392b;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#c0392b;">{{ total_complaints }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Total Complaints</span>
+            <span data-np>जम्मा उजुरी</span>
+        </div>
+    </div>
+
+    <div class="card" style="text-align:center; border-top:4px solid #e67e22;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#e67e22;">{{ open_complaints }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Open</span>
+            <span data-np>खुला</span>
+        </div>
+    </div>
+
+    <div class="card" style="text-align:center; border-top:4px solid #27ae60;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#27ae60;">{{ resolved_complaints }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Resolved</span>
+            <span data-np>समाधान भएको</span>
+        </div>
+    </div>
+
+    <div class="card" style="text-align:center; border-top:4px solid #2980b9;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#2980b9;">{{ total_upvotes }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Total Upvotes</span>
+            <span data-np>जम्मा भोट</span>
+        </div>
+    </div>
+
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
+
+    <!-- Category Stats -->
+    <div class="card">
+        <h3 style="margin-bottom:1rem;">
+            <span data-en>By Category</span>
+            <span data-np>वर्ग अनुसार</span>
+        </h3>
+        {% for stat in category_stats %}
+        <div style="margin-bottom:0.8rem;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                <span>{{ stat.category|capfirst }}</span>
+                <strong>{{ stat.count }}</strong>
+            </div>
+            <div style="background:#eee; border-radius:10px; height:8px;">
+                <div
+                    style="background:#c0392b; border-radius:10px; height:8px; width:{% widthratio stat.count total_complaints 100 %}%;">
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:#999;">
+            <span data-en>No data yet</span>
+            <span data-np>डेटा छैन</span>
+        </p>
+        {% endfor %}
+    </div>
+
+    <!-- District Stats -->
+    <div class="card">
+        <h3 style="margin-bottom:1rem;">
+            <span data-en>Top Districts</span>
+            <span data-np>शीर्ष जिल्लाहरू</span>
+        </h3>
+        {% for stat in district_stats %}
+        <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #f0f0f0;">
+            <span>{{ stat.ward__municipality__district__name|default:"Unknown" }}</span>
+            <span style="background:#fde; color:#c0392b; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.85rem;">
+                {{ stat.count }}
+            </span>
+        </div>
+        {% empty %}
+        <p style="color:#999;">
+            <span data-en>No data yet</span>
+            <span data-np>डेटा छैन</span>
+        </p>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Most Upvoted -->
+<div class="card" style="margin-bottom:1rem;">
+    <h3 style="margin-bottom:1rem;">
+        👍 <span data-en>Most Upvoted Problems</span>
+        <span data-np>सबैभन्दा धेरै भोट पाएका समस्याहरू</span>
+    </h3>
+    {% for complaint in top_complaints %}
+    <div
+        style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid #f0f0f0;">
+        <div>
+            <a href="/complaint/{{ complaint.id }}/" style="text-decoration:none; color:#333; font-weight:bold;">
+                {{ complaint.title }}
+            </a>
+            <br>
+            <small style="color:#888;">
+                📍 {{ complaint.ward }} &nbsp;|&nbsp; {{ complaint.get_category_display }}
+            </small>
+        </div>
+        <span style="background:#fde; color:#c0392b; padding:0.3rem 0.8rem; border-radius:20px; font-weight:bold;">
+            👍 {{ complaint.upvote_count }}
+        </span>
+    </div>
+    {% empty %}
+    <p style="color:#999;">
+        <span data-en>No complaints yet</span>
+        <span data-np>अहिलेसम्म कुनै उजुरी छैन</span>
+    </p>
+    {% endfor %}
+</div>
+
+<!-- Recent Complaints -->
+<div class="card">
+    <h3 style="margin-bottom:1rem;">
+        🕐 <span data-en>Recent Complaints</span>
+        <span data-np>भर्खरका उजुरीहरू</span>
+    </h3>
+    {% for complaint in recent_complaints %}
+    <div
+        style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid #f0f0f0;">
+        <div>
+            <a href="/complaint/{{ complaint.id }}/" style="text-decoration:none; color:#333; font-weight:bold;">
+                {{ complaint.title }}
+            </a>
+            <br>
+            <small style="color:#888;">
+                👤 {{ complaint.user.username }} &nbsp;|&nbsp; 📅 {{ complaint.created_at|date:"M d, Y" }}
+            </small>
+        </div>
+        <span
+            style="padding:0.2rem 0.7rem; border-radius:20px; font-size:0.85rem;
+            background:{% if complaint.status == 'resolved' %}#d5f5e3{% elif complaint.status == 'acknowledged' %}#fef9e7{% else %}#fde{% endif %};
+            color:{% if complaint.status == 'resolved' %}#27ae60{% elif complaint.status == 'acknowledged' %}#e67e22{% else %}#c0392b{% endif %};">
+            {{ complaint.get_status_display }}
+        </span>
+    </div>
+    {% empty %}
+    <p style="color:#999;">
+        <span data-en>No complaints yet</span>
+        <span data-np>अहिलेसम्म कुनै उजुरी छैन</span>
+    </p>
+    {% endfor %}
+</div>
+
+{% endblock %}

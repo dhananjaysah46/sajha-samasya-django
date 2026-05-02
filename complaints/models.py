@@ -4,12 +4,11 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class Ward(models.Model):
-    district = models.CharField(max_length=100)
+    municipality = models.ForeignKey('Municipality', on_delete=models.CASCADE, null=True, blank=True)
     ward_number = models.IntegerField()
-    municipality = models.CharField(max_length=100)
-
+    
     def __str__(self):
-        return f"{self.district} - Ward {self.ward_number}"
+        return f"{self.municipality} - Ward {self.ward_number}"
     
 class Complaint(models.Model):
     CATEGORY_CHOICES = [
@@ -53,3 +52,35 @@ class Upvote(models.Model):  # "Mero wada ma ni yahi problem xa"
 
     def __str__(self):
         return f"Upvote for {self.complaint.title} - {self.status}"
+    
+# Province model 
+class Province(models.Model):
+    name = models.CharField(max_length=100)
+    name_np = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+    
+class District(models.Model):
+    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    name_np = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+    
+class Municipality(models.Model):
+    TYPES = [
+        ('Metropolitan', 'Metropolitan City'),
+        ('sub_Metropolitan', 'Sub-Metropolitan City'),
+        ('municipality', 'Municipality'),
+        ('rural', 'Rural Municipality'),
+    ]
+    district = models.ForeignKey(District, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    name_np = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=TYPES)
+    total_wards = models.IntegerField()
+
+    def __str__(self):
+        return self.name

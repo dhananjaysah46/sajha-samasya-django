@@ -1,12 +1,26 @@
 from django.contrib import admin
-from .models import Ward, Complaint, Upvote
+from .models import Ward, Complaint, Upvote, Province, Municipality, District
 
 # Register your models here.
 
+@admin.register(Province)
+class ProvinceAdmin(admin.ModelAdmin):
+    list_display = ['name', 'name_np']
+
+@admin.register(District)
+class DistrictAdmin(admin.ModelAdmin):
+    list_display = ['name', 'province']
+    list_filter = ['province']
+
+@admin.register(Municipality)
+class MunicipalityAdmin(admin.ModelAdmin):
+    list_display = ['name', 'type', 'district', 'total_wards']
+    list_filter = ['name', 'district__province']
+    search_fields = ['name']
 @admin.register(Ward)
 class WardAdmin(admin.ModelAdmin):
-    list_display = ['municipality', 'ward_number', 'district']
-    search_fields = ['municipality', 'ward_number', 'district']
+    list_display = ['municipality', 'ward_number']
+    search_fields = ['municipality__name']
 
 @admin.register(Complaint)
 class ComplaintAdmin(admin.ModelAdmin):

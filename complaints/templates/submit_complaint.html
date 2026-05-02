@@ -10,6 +10,7 @@
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
+        <!-- Title -->
         <div style="margin-bottom:1rem;">
             <label>
                 <span data-en>Title</span>
@@ -19,12 +20,14 @@
                 style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
         </div>
 
+        <!-- Category -->
         <div style="margin-bottom:1rem;">
             <label>
                 <span data-en>Category</span>
                 <span data-np>वर्ग</span>
             </label><br>
-            <select name="category" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+            <select name="category" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
                 <option value="water">Khane Pani / खाने पानी</option>
                 <option value="road">Bato / बाटो</option>
                 <option value="electricity">Bijuli / बिजुली</option>
@@ -33,18 +36,58 @@
             </select>
         </div>
 
+        <!-- Province -->
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Province</span>
+                <span data-np>प्रदेश</span>
+            </label><br>
+            <select id="province" 
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+                <option value="">-- Select Province / प्रदेश छान्नुस् --</option>
+                {% for province in provinces %}
+                    <option value="{{ province.id }}">{{ province.name }} — {{ province.name_np }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- District -->
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>District</span>
+                <span data-np>जिल्ला</span>
+            </label><br>
+            <select id="district" disabled
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
+                <option value="">-- Select District / जिल्ला छान्नुस् --</option>
+            </select>
+        </div>
+
+        <!-- Municipality -->
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Municipality</span>
+                <span data-np>नगरपालिका</span>
+            </label><br>
+            <select id="municipality" disabled
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
+                <option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>
+            </select>
+        </div>
+
+        <!-- Ward -->
         <div style="margin-bottom:1rem;">
             <label>
                 <span data-en>Ward</span>
                 <span data-np>वडा</span>
             </label><br>
-            <select name="ward" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
-                {% for ward in wards %}
-                    <option value="{{ ward.id }}">{{ ward.municipality }} - Ward {{ ward.ward_number }}</option>
-                {% endfor %}
+            <select id="ward-display" name="ward" required disabled
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
+                <option value="">-- Select Ward / वडा छान्नुस् --</option>
             </select>
         </div>
 
+        <!-- Description -->
         <div style="margin-bottom:1rem;">
             <label>
                 <span data-en>Description</span>
@@ -54,16 +97,16 @@
                 style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;"></textarea>
         </div>
 
+        <!-- Photo -->
         <div style="margin-bottom:1rem;">
             <label>
                 <span data-en>Photo (optional)</span>
                 <span data-np>फोटो (ऐच्छिक)</span>
             </label><br>
-            <input type="file" name="photo" accept="image/*"
-                style="margin-top:0.3rem;">
+            <input type="file" name="photo" accept="image/*" style="margin-top:0.3rem;">
         </div>
 
-        <!-- Hidden GPS fields — auto fill huncha -->
+        <!-- GPS -->
         <input type="hidden" name="latitude" id="lat">
         <input type="hidden" name="longitude" id="lng">
 
@@ -83,6 +126,77 @@
 </div>
 
 <script>
+// Province change → Districts load
+document.getElementById('province').addEventListener('change', function() {
+    const provinceId = this.value;
+    const districtSelect = document.getElementById('district');
+    const muniSelect = document.getElementById('municipality');
+    const wardSelect = document.getElementById('ward-display');
+
+    // Reset tala wala dropdowns
+    districtSelect.innerHTML = '<option value="">-- Select District / जिल्ला छान्नुस् --</option>';
+    muniSelect.innerHTML = '<option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>';
+    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
+    districtSelect.disabled = true;
+    muniSelect.disabled = true;
+    wardSelect.disabled = true;
+
+    if (!provinceId) return;
+
+    fetch(`/api/districts/?province_id=${provinceId}`)
+        .then(res => res.json())
+        .then(data => {
+            data.districts.forEach(d => {
+                districtSelect.innerHTML += `<option value="${d.id}">${d.name} — ${d.name_np}</option>`;
+            });
+            districtSelect.disabled = false;
+        });
+});
+
+// District change → Municipalities load
+document.getElementById('district').addEventListener('change', function() {
+    const districtId = this.value;
+    const muniSelect = document.getElementById('municipality');
+    const wardSelect = document.getElementById('ward-display');
+
+    muniSelect.innerHTML = '<option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>';
+    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
+    muniSelect.disabled = true;
+    wardSelect.disabled = true;
+
+    if (!districtId) return;
+
+    fetch(`/api/municipalities/?district_id=${districtId}`)
+        .then(res => res.json())
+        .then(data => {
+            data.municipalities.forEach(m => {
+                muniSelect.innerHTML += `<option value="${m.id}">${m.name} — ${m.name_np}</option>`;
+            });
+            muniSelect.disabled = false;
+        });
+});
+
+// Municipality change → Wards load
+document.getElementById('municipality').addEventListener('change', function() {
+    const muniId = this.value;
+    const wardSelect = document.getElementById('ward-display');
+
+    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
+    wardSelect.disabled = true;
+
+    if (!muniId) return;
+
+    fetch(`/api/wards/?municipality_id=${muniId}`)
+        .then(res => res.json())
+        .then(data => {
+            data.wards.forEach(w => {
+                wardSelect.innerHTML += `<option value="${w.id}">Ward ${w.ward_number} — वडा ${w.ward_number}</option>`;
+            });
+            wardSelect.disabled = false;
+        });
+});
+
+// GPS
 function getLocation() {
     navigator.geolocation.getCurrentPosition((pos) => {
         document.getElementById('lat').value = pos.coords.latitude;

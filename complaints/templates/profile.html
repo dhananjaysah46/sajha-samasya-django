@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Profile Header -->
+<div class="card" style="display:flex; align-items:center; gap:1.5rem; margin-bottom:1.5rem;">
+    <div
+        style="width:70px; height:70px; border-radius:50%; background:#c0392b; display:flex; align-items:center; justify-content:center; font-size:2rem; color:white; font-weight:bold; flex-shrink:0;">
+        {{ user.username|first|upper }}
+    </div>
+    <div>
+        <h2 style="margin-bottom:0.3rem;">{{ user.username }}</h2>
+        <p style="color:#888; margin-bottom:0.5rem;">{{ user.email }}</p>
+        <p style="color:#888; font-size:0.9rem;">
+            <span data-en>Member since</span>
+            <span data-np>सदस्य भएदेखि</span>
+            {{ user.date_joined|date:"M Y" }}
+        </p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+    <div class="card" style="text-align:center; border-top:4px solid #c0392b;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#c0392b;">{{ complaint_count }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Complaints Filed</span>
+            <span data-np>दर्ता गरिएका उजुरी</span>
+        </div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #27ae60;">
+        <div style="font-size:2.5rem; font-weight:bold; color:#27ae60;">{{ upvote_count }}</div>
+        <div style="color:#666; margin-top:0.3rem;">
+            <span data-en>Problems Supported</span>
+            <span data-np>समर्थन गरिएका समस्या</span>
+        </div>
+    </div>
+</div>
+
+<!-- My Complaints -->
+<div class="card" style="margin-bottom:1rem;">
+    <h3 style="margin-bottom:1rem;">
+        📝 <span data-en>My Complaints</span>
+        <span data-np>मेरा उजुरीहरू</span>
+    </h3>
+
+    {% for complaint in user_complaints %}
+    <div style="padding:0.8rem 0; border-bottom:1px solid #f0f0f0;">
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+            <div style="flex:1;">
+                <a href="/complaint/{{ complaint.id }}/" style="text-decoration:none; color:#333; font-weight:bold;">
+                    {{ complaint.title }}
+                </a>
+                <br>
+                <small style="color:#888;">
+                    📍 {{ complaint.ward.municipality }} - Ward {{ complaint.ward.ward_number }}
+                    &nbsp;|&nbsp; 📅 {{ complaint.created_at|date:"M d, Y" }}
+                </small>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center; margin-left:1rem;">
+                <span style="padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem;
+                    {% if complaint.status == 'resolved' %}background:#d5f5e3; color:#27ae60;
+                    {% elif complaint.status == 'acknowledged' %}background:#fef9e7; color:#e67e22;
+                    {% else %}background:#fde; color:#c0392b;{% endif %}">
+                    {{ complaint.get_status_display }}
+                </span>
+                <a href="/complaint/{{ complaint.id }}/edit/" style="color:#888; font-size:0.85rem;">✏️</a>
+                <a href="/complaint/{{ complaint.id }}/delete/" style="color:#c0392b; font-size:0.85rem;">🗑️</a>
+            </div>
+            <!-- Yo add gar complaint card ma status badge pachhi -->
+            <div style="margin-top:0.5rem;">
+                <div style="display:flex; gap:0; height:6px; border-radius:10px; overflow:hidden; background:#eee;">
+                    <div style="background:#c0392b; width:33%;"></div>
+                    {% if complaint.status == 'acknowledged' or complaint.status == 'resolved' %}
+                    <div style="background:#e67e22; width:33%;"></div>
+                    {% else %}
+                    <div style="background:#eee; width:33%;"></div>
+                    {% endif %}
+                    {% if complaint.status == 'resolved' %}
+                    <div style="background:#27ae60; width:34%;"></div>
+                    {% else %}
+                    <div style="background:#eee; width:34%;"></div>
+                    {% endif %}
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; font-size:0.7rem; color:#aaa; margin-top:0.2rem;">
+                    <span data-en>Reported</span><span data-np>दर्ता</span>
+                    <span data-en>Acknowledged</span><span data-np>स्वीकृत</span>
+                    <span data-en>Resolved</span><span data-np>समाधान</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color:#999; text-align:center; padding:1rem;">
+        <span data-en>No complaints yet. <a href="/submit/">Report your first problem!</a></span>
+        <span data-np>अहिलेसम्म कुनै उजुरी छैन। <a href="/submit/">पहिलो समस्या रिपोर्ट गर्नुस्!</a></span>
+    </p>
+    {% endfor %}
+</div>
+
+<!-- Upvoted Complaints -->
+<div class="card">
+    <h3 style="margin-bottom:1rem;">
+        👍 <span data-en>Problems I Supported</span>
+        <span data-np>मैले समर्थन गरेका समस्याहरू</span>
+    </h3>
+
+    {% for upvote in user_upvotes %}
+    <div style="padding:0.8rem 0; border-bottom:1px solid #f0f0f0;">
+        <a href="/complaint/{{ upvote.complaint.id }}/" style="text-decoration:none; color:#333; font-weight:bold;">
+            {{ upvote.complaint.title }}
+        </a>
+        <br>
+        <small style="color:#888;">
+            📅 {{ upvote.created_at|date:"M d, Y" }}
+        </small>
+    </div>
+    {% empty %}
+    <p style="color:#999; text-align:center; padding:1rem;">
+        <span data-en>You haven't supported any complaints yet.</span>
+        <span data-np>तपाईंले अहिलेसम्म कुनै उजुरी समर्थन गर्नुभएको छैन।</span>
+    </p>
+    {% endfor %}
+</div>
+
+{% endblock %}

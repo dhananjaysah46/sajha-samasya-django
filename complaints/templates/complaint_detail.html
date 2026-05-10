@@ -3,7 +3,7 @@
 {% block content %}
 
 <div style="max-width:700px; margin:0 auto;">
-    
+
     <!-- Back button -->
     <a href="/" class="btn btn-outline" style="margin-bottom:1rem; display:inline-block;">
         ← <span data-en>Back</span><span data-np>फिर्ता</span>
@@ -15,7 +15,8 @@
             <span style="background:#fde; color:#c0392b; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem;">
                 {{ complaint.get_category_display }}
             </span>
-            <span style="background:#eee; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem;
+            <span
+                style="background:#eee; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem;
                 color:{% if complaint.status == 'resolved' %}green{% elif complaint.status == 'acknowledged' %}orange{% else %}#888{% endif %}">
                 {{ complaint.get_status_display }}
             </span>
@@ -38,27 +39,38 @@
 
         <!-- Photo -->
         {% if complaint.photo %}
-            <img src="{{ complaint.photo.url }}" 
-                style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">
+        <img src="{{ complaint.photo.url }}"
+            style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">
         {% endif %}
 
         <!-- Map if location exists -->
         {% if complaint.latitude and complaint.longitude %}
-            <h4 style="margin-bottom:0.5rem;">
-                🗺️ <span data-en>Location</span><span data-np>स्थान</span>
-            </h4>
-            <div id="detail-map" style="height:250px; border-radius:8px; margin-bottom:1.5rem;"></div>
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-            <script>
-                const map = L.map('detail-map').setView(
-                    [{{ complaint.latitude }}, {{ complaint.longitude }}], 15
+        <h4 style="margin-bottom:0.5rem;">
+            🗺️ <span data-en>Location</span><span data-np>स्थान</span>
+        </h4>
+        <div id="detail-map" style="height:250px; border-radius:8px; margin-bottom:1.5rem;"></div>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            const map = L.map('detail-map').setView(
+                [{{ complaint.latitude }}, { { complaint.longitude } }], 15
                 );
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                L.marker([{{ complaint.latitude }}, {{ complaint.longitude }}]).addTo(map);
-            </script>
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([{{ complaint.latitude }}, {{ complaint.longitude }}]).addTo(map);
+        </script>
         {% endif %}
-
+        <!-- Edit/Delete — sirf owner le dekhinxa -->
+        {% if user == complaint.user %}
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <a href="/complaint/{{ complaint.id }}/edit/" class="btn btn-outline" style="font-size:0.9rem;">
+                ✏️ <span data-en>Edit</span><span data-np>सम्पादन</span>
+            </a>
+            <a href="/complaint/{{ complaint.id }}/delete/" class="btn btn-outline"
+                style="font-size:0.9rem; color:#c0392b; border-color:#c0392b;">
+                🗑️ <span data-en>Delete</span><span data-np>मेटाउनुस्</span>
+            </a>
+        </div>
+        {% endif %}
         <!-- Upvote section -->
         <div style="display:flex; align-items:center; gap:1rem; padding-top:1rem; border-top:1px solid #eee;">
             <span style="font-size:1.1rem; font-weight:bold;">
@@ -67,18 +79,79 @@
                 <span data-np>जनालाई यही समस्या छ</span>
             </span>
             {% if user.is_authenticated %}
-                <a href="/upvote/{{ complaint.id }}/" class="btn {% if user_upvoted %}btn-primary{% else %}btn-outline{% endif %}">
-                    {% if user_upvoted %}
-                        ✓ <span data-en>You upvoted</span><span data-np>तपाईंले भोट दिनुभयो</span>
-                    {% else %}
-                        <span data-en>Same problem</span><span data-np>मलाई पनि</span>
-                    {% endif %}
-                </a>
+            <a href="/upvote/{{ complaint.id }}/"
+                class="btn {% if user_upvoted %}btn-primary{% else %}btn-outline{% endif %}">
+                {% if user_upvoted %}
+                ✓ <span data-en>You upvoted</span><span data-np>तपाईंले भोट दिनुभयो</span>
+                {% else %}
+                <span data-en>Same problem</span><span data-np>मलाई पनि</span>
+                {% endif %}
+            </a>
             {% else %}
-                <a href="/login/" class="btn btn-outline">
-                    <span data-en>Login to upvote</span><span data-np>भोट दिन लगइन गर्नुस्</span>
-                </a>
+            <a href="/login/" class="btn btn-outline">
+                <span data-en>Login to upvote</span><span data-np>भोट दिन लगइन गर्नुस्</span>
+            </a>
             {% endif %}
+        </div>
+        <!-- Progress Timeline -->
+        <div class="card" style="margin-top:1rem;">
+            <h4 style="margin-bottom:1rem;">
+                📋 <span data-en>Progress Timeline</span>
+                <span data-np>प्रगति विवरण</span>
+            </h4>
+
+            <div style="position:relative; padding-left:1.5rem;">
+
+                <!-- Current status -->
+                <div style="position:relative; margin-bottom:1rem;">
+                    <div
+                        style="position:absolute; left:-1.5rem; top:0.3rem; width:12px; height:12px; border-radius:50%;
+                background:{% if complaint.status == 'resolved' %}#27ae60{% elif complaint.status == 'acknowledged' %}#e67e22{% else %}#c0392b{% endif %};">
+                    </div>
+                    <div style="border-left:2px solid #eee; padding-left:1rem; padding-bottom:1rem;">
+                        <strong>
+                            <span data-en>Reported</span>
+                            <span data-np>दर्ता भयो</span>
+                        </strong>
+                        <br>
+                        <small style="color:#888;">{{ complaint.created_at|date:"M d, Y — H:i" }}</small>
+                        <br>
+                        <small style="color:#888;">👤 {{ complaint.user.username }}</small>
+                    </div>
+                </div>
+
+                <!-- Updates -->
+                {% for update in complaint.updates.all %}
+                <div style="position:relative; margin-bottom:1rem;">
+                    <div
+                        style="position:absolute; left:-1.5rem; top:0.3rem; width:12px; height:12px; border-radius:50%;
+                background:{% if update.new_status == 'resolved' %}#27ae60{% elif update.new_status == 'acknowledged' %}#e67e22{% else %}#c0392b{% endif %};">
+                    </div>
+                    <div style="border-left:2px solid #eee; padding-left:1rem; padding-bottom:1rem;">
+                        <strong>
+                            {{ update.old_status|capfirst }} → {{ update.new_status|capfirst }}
+                        </strong>
+                        {% if update.note %}
+                        <br><span style="color:#555; font-size:0.9rem;">{{ update.note }}</span>
+                        {% endif %}
+                        <br>
+                        <small style="color:#888;">
+                            📅 {{ update.created_at|date:"M d, Y — H:i" }}
+                            {% if update.updated_by %}&nbsp;|&nbsp; 👤 {{ update.updated_by.username }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- No updates yet -->
+                {% if not complaint.updates.all %}
+                <div style="color:#999; font-size:0.9rem; padding-left:1rem;">
+                    <span data-en>No updates yet.</span>
+                    <span data-np>अहिलेसम्म कुनै अपडेट छैन।</span>
+                </div>
+                {% endif %}
+
+            </div>
         </div>
     </div>
 </div>

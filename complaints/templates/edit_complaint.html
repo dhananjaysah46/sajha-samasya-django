@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width:600px; margin:0 auto;">
+    <h2 style="margin-bottom:1.5rem;">
+        <span data-en>Edit Complaint</span>
+        <span data-np>उजुरी सम्पादन गर्नुस्</span>
+    </h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Title</span>
+                <span data-np>शीर्षक</span>
+            </label><br>
+            <input type="text" name="title" value="{{ complaint.title }}" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Category</span>
+                <span data-np>वर्ग</span>
+            </label><br>
+            <select name="category" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+                <option value="water"       {% if complaint.category == 'water' %}selected{% endif %}>Khane Pani / खाने पानी</option>
+                <option value="road"        {% if complaint.category == 'road' %}selected{% endif %}>Bato / बाटो</option>
+                <option value="electricity" {% if complaint.category == 'electricity' %}selected{% endif %}>Bijuli / बिजुली</option>
+                <option value="waste"       {% if complaint.category == 'waste' %}selected{% endif %}>Fohor / फोहोर</option>
+                <option value="other"       {% if complaint.category == 'other' %}selected{% endif %}>Aru / अरु</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label>
+                <span data-en>Description</span>
+                <span data-np>विवरण</span>
+            </label><br>
+            <textarea name="description" rows="4" required
+                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">{{ complaint.description }}</textarea>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+            <label>
+                <span data-en>Photo (leave empty to keep current)</span>
+                <span data-np>फोटो (नराखे अहिलेकै रहन्छ)</span>
+            </label><br>
+            {% if complaint.photo %}
+                <img src="{{ complaint.photo.url }}"
+                    style="width:100%; max-height:150px; object-fit:cover; border-radius:6px; margin:0.5rem 0;">
+            {% endif %}
+            <input type="file" name="photo" accept="image/*" style="margin-top:0.3rem;">
+        </div>
+
+        <div style="display:flex; gap:1rem;">
+            <button type="submit" class="btn btn-primary" style="flex:1; padding:0.8rem;">
+                <span data-en>Save Changes</span>
+                <span data-np>परिवर्तन सुरक्षित गर्नुस्</span>
+            </button>
+            <a href="/complaint/{{ complaint.id }}/" class="btn btn-outline" style="flex:1; padding:0.8rem; text-align:center;">
+                <span data-en>Cancel</span>
+                <span data-np>रद्द गर्नुस्</span>
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

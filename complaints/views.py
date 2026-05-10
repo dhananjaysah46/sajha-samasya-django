@@ -1,7 +1,7 @@
 from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Complaint, Municipality, Ward, Upvote, Province, District, Municipality
+from .models import Complaint, Municipality, Ward, Upvote, Province, District, Municipality, ComplaintUpdate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
@@ -10,32 +10,67 @@ from .serializers import ComplaintSerializer, WardSerializer, MunicipalitySerial
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from django.core.paginator import Paginator
 
 from django.http import JsonResponse
 
 # Create your views here.
 
 def home(request):
-    complaints = Complaint.objects.all().order_by('-created_at')
+    complaints_list = Complaint.objects.select_related('user','ward', 'ward__municipality', 'ward__municipality__district').order_by('-created_at')
     wards = Ward.objects.all()
 
     #filtering by category
     category = request.GET.get('category')
-    if category:
-        complaints = complaints.filter(category=category)
+    district = request.GET.get('district')
+    search = request.GET.get('search')
 
-    #filtering by ward
-    ward_id = request.GET.get('ward')
-    if ward_id:
-        complaints = complaints.filter(ward__id=ward_id)
+    if category:
+        complaints_list = complaints_list.filter(category=category)
+    if district:
+        complaints_list = complaints_list.filter(ward__municipality__district_id=district)
+    if search:
+        complaints_list = complaints_list.filter(
+            title__icontains=search
+        ) | complaints_list.filter(
+            description__icontains=search
+        )
+
+    # pagination - 10 per page
+    paginator = Paginator(complaints_list, 10)
+    page_number = request.GET.get('page')
+    complaints = paginator.get_page(page_number)
+
+    districts = District.objects.select_related('province').order_by('name')
 
     return render(request, 'home.html', {
         'complaints': complaints, 
-        'wards': wards,
+        'search': search or '',
+        'districts': districts,
     })
 
 # login view
 @login_required
+def profile(request):
+    user_complaints = Complaint.objects.filter(
+        user=request.user
+    ).select_related(
+        'ward', 'ward__municipality'
+    ).order_by('-created_at')
+
+    user_upvotes = Upvote.objects.filter(
+        user=request.user
+    ).select_related(
+        'complaint'
+    ).order_by('-created_at')
+
+    return render(request, 'profile.html', {
+        'user_complaints': user_complaints,
+        'user_upvotes': user_upvotes,
+        'complaint_count': user_complaints.count(),
+        'upvote_count': user_upvotes.count(),
+    })
+
 def submit_complaint(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -62,19 +97,61 @@ def submit_complaint(request):
 
     provinces = Province.objects.all()
     return render(request, 'submit_complaint.html', {'provinces': provinces})
+@login_required
+def edit_complaint(request, complaint_id):
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+
+    # Sirf owner le edit garna milxa
+    if complaint.user != request.user:
+        return redirect('home')
+
+    if request.method == 'POST':
+        complaint.title = request.POST.get('title')
+        complaint.description = request.POST.get('description')
+        complaint.category = request.POST.get('category')
+        if request.FILES.get('photo'):
+            complaint.photo = request.FILES.get('photo')
+        complaint.save()
+        return redirect('complaint_detail', complaint_id=complaint.id)
+
+    return render(request, 'edit_complaint.html', {'complaint': complaint})
+
+
+@login_required
+def delete_complaint(request, complaint_id):
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+
+    # Sirf owner le delete garna milxa
+    if complaint.user != request.user:
+        return redirect('home')
+
+    if request.method == 'POST':
+        complaint.delete()
+        return redirect('home')
+
+    return render(request, 'delete_complaint.html', {'complaint': complaint})
 
 @login_required
 def upvote_complaint(request, complaint_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+    
     complaint = get_object_or_404(Complaint, id=complaint_id)
     
     #Already upvoted?
     existing = Upvote.objects.filter(user=request.user, complaint=complaint)
+    
     if existing.exists():
         existing.delete()  # Remove upvote
+        voted = False
     else:
         Upvote.objects.create(user=request.user, complaint=complaint)  # Add upvote
-
-    return redirect('home')
+        voted = True
+    upvote_count = Upvote.objects.filter(complaint=complaint).count()
+    return JsonResponse({
+        'voted': voted, 
+        'upvote_count': upvote_count
+        })
 
 def register(request):
     if request.method == 'POST':

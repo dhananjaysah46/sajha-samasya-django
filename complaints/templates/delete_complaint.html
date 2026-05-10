@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width:500px; margin:0 auto; text-align:center;">
+    <h2 style="margin-bottom:1rem; color:#c0392b;">
+        <span data-en>Delete Complaint?</span>
+        <span data-np>उजुरी मेटाउने?</span>
+    </h2>
+
+    <p style="color:#666; margin-bottom:1.5rem;">
+        "<strong>{{ complaint.title }}</strong>"
+        <br><br>
+        <span data-en>This action cannot be undone.</span>
+        <span data-np>यो कार्य फिर्ता गर्न सकिँदैन।</span>
+    </p>
+
+    <form method="POST" style="display:flex; gap:1rem; justify-content:center;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" style="padding:0.8rem 2rem;">
+            <span data-en>Yes, Delete</span>
+            <span data-np>हो, मेटाउनुस्</span>
+        </button>
+        <a href="/complaint/{{ complaint.id }}/" class="btn btn-outline" style="padding:0.8rem 2rem;">
+            <span data-en>Cancel</span>
+            <span data-np>रद्द गर्नुस्</span>
+        </a>
+    </form>
+</div>
+{% endblock %}

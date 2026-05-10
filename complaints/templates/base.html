@@ -110,6 +110,18 @@
         body.nepali [data-np] {
             display: inline;
         }
+        /* Danger button — delete ko lagi */
+        .btn-danger {
+            background: #c0392b;
+            color: white;
+            border: none;
+        }
+        .btn-danger:hover { opacity: 0.85; }
+
+        /* Status badges consistent */
+        .badge-open { background:#fde; color:#c0392b; }
+        .badge-acknowledged { background:#fef9e7; color:#e67e22; }
+        .badge-resolved { background:#d5f5e3; color:#27ae60; }
     </style>
 </head>
 
@@ -121,11 +133,11 @@
         </a>
         <div class="nav-links">
             {% if user.is_authenticated %}
-            <span>
+            <a href="/profile/" style="color:white; text-decoration: none;">
                 <span data-en>Hello,</span>
                 <span data-np>नमस्ते,</span>
                 {{ user.username }}
-            </span>
+            </a>
             <a href="/submit/">
                 <span data-en>+ Report</span>
                 <span data-np>+ रिपोर्ट</span>

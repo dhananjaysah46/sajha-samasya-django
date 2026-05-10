@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Ward, Complaint, Upvote, Province, Municipality, District
+from .models import Ward, Complaint, Upvote, Province, Municipality, District, ComplaintUpdate
 
 # Register your models here.
 
@@ -31,3 +31,7 @@ class ComplaintAdmin(admin.ModelAdmin):
 @admin.register(Upvote)
 class UpvoteAdmin(admin.ModelAdmin):
     list_display = ['user', 'complaint', 'created_at']
+
+@admin.register(ComplaintUpdate)
+class ComplaintUpdateAdmin(admin.ModelAdmin):
+    list_display = ['complaint', 'old_status', 'new_status', 'updated_by', 'created_at']

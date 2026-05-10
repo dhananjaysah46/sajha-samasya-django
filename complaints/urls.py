@@ -13,6 +13,8 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('api/map-data/', views.complaints_map_data, name='complaints_map_data'),
     path('complaint/<int:complaint_id>/', views.complaint_detail, name='complaint_detail'),
+    path('complaint/<int:complaint_id>/edit/', views.edit_complaint, name='edit_complaint'),
+    path('complaint/<int:complaint_id>/delete/', views.delete_complaint, name='delete_complaint'),
     path('api/districts/', views.get_districts, name='get_districts'),
     path('api/municipalities/', views.get_municipalities, name='get_municipalities'),
     path('api/wards/', views.get_wards, name='get_wards'),
@@ -24,4 +26,5 @@ urlpatterns = [
     path('api/municipalities/', MunicipalityListAPI.as_view(), name='api_municipalities'),
     path('api/wards/', WardListAPI.as_view(), name='api_wards'),
     path('api/stats/', stats_api, name='api_stats'),
+    path('profile/', views.profile, name='profile'),
 ]

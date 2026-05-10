@@ -42,6 +42,25 @@ class Complaint(models.Model):
     def __str__(self):
         return f"{self.title} - {self.ward}"
     
+class ComplaintUpdate(models.Model):
+    complaint = models.ForeignKey(
+        Complaint, 
+        on_delete=models.CASCADE,
+        related_name='updates'
+    )
+    old_status = models.CharField(max_length=50)
+    new_status = models.CharField(max_length=50)
+    note = models.TextField(blank=True)
+    updated_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.complaint.title}: {self.old_status} → {self.new_status}"
+    
 class Upvote(models.Model):  # "Mero wada ma ni yahi problem xa"
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='upvotes')

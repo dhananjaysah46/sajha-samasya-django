@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="max-width:480px; margin:5rem auto; text-align:center;">
+    <div style="font-family:'Fraunces',serif; font-size:8rem; font-weight:700; color:var(--border); line-height:1; margin-bottom:1rem;">
+        404
+    </div>
+    <h2 style="font-family:'Fraunces',serif; font-size:1.8rem; margin-bottom:0.75rem;">
+        <span data-en>Page not found</span>
+        <span data-np>पृष्ठ भेटिएन</span>
+    </h2>
+    <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.95rem;">
+        <span data-en>The page you're looking for doesn't exist or has been moved.</span>
+        <span data-np>तपाईंले खोज्नुभएको पृष्ठ अवस्थित छैन वा सारिएको छ।</span>
+    </p>
+    <div style="display:flex; gap:0.75rem; justify-content:center;">
+        <a href="/" class="btn btn-primary">
+            🏠 <span data-en>Go Home</span><span data-np>गृहपृष्ठमा जानुस्</span>
+        </a>
+        <a href="/dashboard/" class="btn btn-ghost">
+            📊 <span data-en>Dashboard</span><span data-np>ड्यासबोर्ड</span>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

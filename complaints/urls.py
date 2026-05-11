@@ -1,8 +1,15 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from .views import (ComplaintListCreateAPI, ComplaintDetailAPI, DistrictListAPI, MunicipalityListAPI, WardListAPI, ProvinceListAPI, upvote_api, stats_api)
+from django.conf.urls.static import static
+from django.conf import settings
+from django.contrib import admin
+
+handler404 = 'core.views.custom_404'
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('complaints.urls')),
     path('', views.home, name='home'),
     path('submit/', views.submit_complaint, name='submit_complaint'),
     path('upvote/<int:complaint_id>/', views.upvote_complaint, name='upvote_complaint'),
@@ -27,4 +34,4 @@ urlpatterns = [
     path('api/wards/', WardListAPI.as_view(), name='api_wards'),
     path('api/stats/', stats_api, name='api_stats'),
     path('profile/', views.profile, name='profile'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

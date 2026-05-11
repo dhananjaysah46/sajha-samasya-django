@@ -61,6 +61,8 @@ def home(request):
         'sort': sort,
     })
 
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
 # login view
 @login_required
 def profile(request):
@@ -246,6 +248,8 @@ def register(request):
     return render(request, 'register.html')
 
 def login_view(request):
+    next_url = request.GET.get('next', '')  # Redirect after login
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -254,10 +258,10 @@ def login_view(request):
 
         if user:
             login(request, user)
-            return redirect('home')
+            return redirect(next_url if next_url else 'home')
         else:
-            return render(request, 'login.html', {'error': 'Invalid credentials!'})
-    return render(request, 'login.html')
+            return render(request, 'login.html', {'error': 'Invalid username or password / गलत प्रयोगकर्ता नाम वा पासवर्ड', 'next': next_url})
+    return render(request, 'login.html', {'next': next_url})
 
 def logout_view(request):
     logout(request)

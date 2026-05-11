@@ -11,6 +11,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.core.paginator import Paginator
+from PIL import Image
+import io
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from django.http import JsonResponse
 
@@ -18,12 +21,12 @@ from django.http import JsonResponse
 
 def home(request):
     complaints_list = Complaint.objects.select_related('user','ward', 'ward__municipality', 'ward__municipality__district').order_by('-created_at')
-    wards = Ward.objects.all()
 
     #filtering by category
     category = request.GET.get('category')
     district = request.GET.get('district')
     search = request.GET.get('search')
+    sort = request.GET.get('sort', 'newest')  # default sorting by newest
 
     if category:
         complaints_list = complaints_list.filter(category=category)
@@ -36,6 +39,14 @@ def home(request):
             description__icontains=search
         )
 
+    # sorting
+    if sort == 'oldest':
+        complaints_list = complaints_list.order_by('created_at')
+    elif sort == 'most_upvoted':
+        complaints_list = complaints_list.annotate(upvote_count=Count('upvotes')).order_by('-upvote_count')
+    else:  # newest
+        complaints_list = complaints_list.order_by('-created_at')
+
     # pagination - 10 per page
     paginator = Paginator(complaints_list, 10)
     page_number = request.GET.get('page')
@@ -47,6 +58,7 @@ def home(request):
         'complaints': complaints, 
         'search': search or '',
         'districts': districts,
+        'sort': sort,
     })
 
 # login view
@@ -71,32 +83,97 @@ def profile(request):
         'upvote_count': user_upvotes.count(),
     })
 
+def compress_image(photo):
+    img = Image.open(photo)
+    
+    # RGB convert gar — PNG transparency handle garxa
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    
+    # Max 800px width ma resize gar
+    max_width = 800
+    if img.width > max_width:
+        ratio = max_width / img.width
+        new_height = int(img.height * ratio)
+        img = img.resize((max_width, new_height), Image.LANCZOS)
+    
+    # Compress garxa
+    output = io.BytesIO()
+    img.save(output, format='JPEG', quality=75)
+    output.seek(0)
+    
+    return InMemoryUploadedFile(
+        output, 'ImageField',
+        f"{photo.name.split('.')[0]}.jpg",
+        'image/jpeg',
+        output.getbuffer().nbytes,
+        None
+    )
+
+
+@login_required
 def submit_complaint(request):
+    errors = {}
+
     if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        category = request.POST.get('category')
-        ward_id = request.POST.get('ward')
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        category = request.POST.get('category', '').strip()
+        ward_id = request.POST.get('ward', '').strip()
         photo = request.FILES.get('photo')
-        latitude = request.POST.get('latitude')
-        longitude = request.POST.get('longitude')
+        latitude = request.POST.get('latitude') or None
+        longitude = request.POST.get('longitude') or None
 
-        ward = get_object_or_404(Ward, id=ward_id)
+        # Validation
+        if not title:
+            errors['title'] = 'Title required / शीर्षक आवश्यक छ'
+        elif len(title) < 5:
+            errors['title'] = 'Title too short (min 5 chars) / शीर्षक धेरै छोटो छ'
 
-        Complaint.objects.create(
-            title=title,
-            description=description,
-            category=category,
-            ward=ward,
-            user=request.user,
-            photo=photo,
-            latitude=latitude or None,
-            longitude=longitude or None,
-        )
-        return redirect('home')
+        if not description:
+            errors['description'] = 'Description required / विवरण आवश्यक छ'
+        elif len(description) < 10:
+            errors['description'] = 'Description too short (min 10 chars) / विवरण धेरै छोटो छ'
+
+        if not category:
+            errors['category'] = 'Category required / वर्ग आवश्यक छ'
+
+        if not ward_id:
+            errors['ward'] = 'Please select ward / वडा छान्नुस्'
+
+        if photo:
+            # 5MB limit
+            if photo.size > 5 * 1024 * 1024:
+                errors['photo'] = 'Photo too large (max 5MB) / फोटो धेरै ठूलो छ (अधिकतम ५MB)'
+            elif not photo.content_type.startswith('image/'):
+                errors['photo'] = 'Only images allowed / फोटो मात्र अनुमति छ'
+
+        if not errors:
+            ward = get_object_or_404(Ward, id=ward_id)
+            
+            # Photo compress gar
+            if photo:
+                photo = compress_image(photo)
+
+            Complaint.objects.create(
+                user=request.user,
+                ward=ward,
+                title=title,
+                description=description,
+                category=category,
+                photo=photo,
+                latitude=latitude,
+                longitude=longitude,
+            )
+            return redirect('home')
 
     provinces = Province.objects.all()
-    return render(request, 'submit_complaint.html', {'provinces': provinces})
+    return render(request, 'submit_complaint.html', {
+        'provinces': provinces,
+        'errors': errors,
+        'old': request.POST,  # Form refill ko lagi
+    })
+
 @login_required
 def edit_complaint(request, complaint_id):
     complaint = get_object_or_404(Complaint, id=complaint_id)

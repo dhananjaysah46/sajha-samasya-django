@@ -2,158 +2,300 @@
 
 {% block content %}
 
-<div style="max-width:700px; margin:0 auto;">
+<!-- Back button -->
+<a href="/" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--text-muted); text-decoration:none; font-size:0.9rem; margin-bottom:1.5rem; transition:color 0.15s;">
+    ← <span data-en>Back to complaints</span><span data-np>उजुरी सूचीमा फर्कनुस्</span>
+</a>
 
-    <!-- Back button -->
-    <a href="/" class="btn btn-outline" style="margin-bottom:1rem; display:inline-block;">
-        ← <span data-en>Back</span><span data-np>फिर्ता</span>
-    </a>
+<div style="display:grid; grid-template-columns:1fr 320px; gap:1.5rem; align-items:start;">
 
-    <div class="card">
-        <!-- Category + Status badges -->
-        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
-            <span style="background:#fde; color:#c0392b; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem;">
-                {{ complaint.get_category_display }}
-            </span>
-            <span
-                style="background:#eee; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem;
-                color:{% if complaint.status == 'resolved' %}green{% elif complaint.status == 'acknowledged' %}orange{% else %}#888{% endif %}">
-                {{ complaint.get_status_display }}
-            </span>
+    <!-- LEFT: Main Content -->
+    <div>
+
+        <!-- Complaint Card -->
+        <div class="card" style="margin-bottom:1rem;">
+
+            <!-- Badges + Date -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <span class="badge badge-category">
+                        {% if complaint.category == 'water' %}💧
+                        {% elif complaint.category == 'road' %}🛣️
+                        {% elif complaint.category == 'electricity' %}⚡
+                        {% elif complaint.category == 'waste' %}🗑️
+                        {% else %}📌{% endif %}
+                        {{ complaint.get_category_display }}
+                    </span>
+                    <span class="badge {% if complaint.status == 'resolved' %}badge-resolved{% elif complaint.status == 'acknowledged' %}badge-acknowledged{% else %}badge-open{% endif %}">
+                        {% if complaint.status == 'resolved' %}✓{% elif complaint.status == 'acknowledged' %}⏳{% else %}●{% endif %}
+                        {{ complaint.get_status_display }}
+                    </span>
+                </div>
+                <small style="color:var(--text-light); font-size:0.82rem;">
+                    {{ complaint.created_at|date:"M d, Y" }}
+                </small>
+            </div>
+
+            <!-- Title -->
+            <h1 style="font-family:'Fraunces',serif; font-size:1.6rem; font-weight:700; color:var(--text); letter-spacing:-0.02em; line-height:1.3; margin-bottom:0.75rem;">
+                {{ complaint.title }}
+            </h1>
+
+            <!-- Meta -->
+            <div style="display:flex; gap:1.2rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+                <span style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:0.3rem;">
+                    📍 {{ complaint.ward.municipality }} · Ward {{ complaint.ward.ward_number }}
+                </span>
+                <span style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:0.3rem;">
+                    👤 {{ complaint.user.username }}
+                </span>
+                <span style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:0.3rem;">
+                    🏛️ {{ complaint.ward.municipality.district.name }}
+                </span>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Description -->
+            <p style="font-size:1rem; line-height:1.75; color:var(--text); margin:1.25rem 0;">
+                {{ complaint.description }}
+            </p>
+
+            <!-- Photo -->
+            {% if complaint.photo %}
+            <img src="{{ complaint.photo.url }}"
+                style="width:100%; max-height:400px; object-fit:cover; border-radius:10px; margin-bottom:1rem;">
+            {% endif %}
+
+            <!-- Owner actions -->
+            {% if user == complaint.user %}
+            <hr class="divider">
+            <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+                <a href="/complaint/{{ complaint.id }}/edit/" class="btn btn-ghost btn-sm">
+                    ✏️ <span data-en>Edit</span><span data-np>सम्पादन</span>
+                </a>
+                <a href="/complaint/{{ complaint.id }}/delete/" class="btn btn-sm" style="color:var(--red); border:1.5px solid var(--red); background:transparent; border-radius:var(--radius-sm); padding:0.3rem 0.8rem; font-size:0.8rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+                    🗑️ <span data-en>Delete</span><span data-np>मेटाउनुस्</span>
+                </a>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Title -->
-        <h2 style="margin-bottom:0.5rem;">{{ complaint.title }}</h2>
-
-        <!-- Meta info -->
-        <p style="color:#888; font-size:0.9rem; margin-bottom:1rem;">
-            📍 {{ complaint.ward }} &nbsp;|&nbsp;
-            👤 {{ complaint.user.username }} &nbsp;|&nbsp;
-            📅 {{ complaint.created_at|date:"M d, Y" }}
-        </p>
-
-        <!-- Description -->
-        <p style="font-size:1rem; line-height:1.6; margin-bottom:1.5rem;">
-            {{ complaint.description }}
-        </p>
-
-        <!-- Photo -->
-        {% if complaint.photo %}
-        <img src="{{ complaint.photo.url }}"
-            style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">
-        {% endif %}
-
-        <!-- Map if location exists -->
+        <!-- Photo Map -->
         {% if complaint.latitude and complaint.longitude %}
-        <h4 style="margin-bottom:0.5rem;">
-            🗺️ <span data-en>Location</span><span data-np>स्थान</span>
-        </h4>
-        <div id="detail-map" style="height:250px; border-radius:8px; margin-bottom:1.5rem;"></div>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <div class="card" style="padding:0; overflow:hidden; margin-bottom:1rem;">
+            <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border);">
+                <h3 style="font-size:1rem; font-weight:600;">
+                    🗺️ <span data-en>Location</span><span data-np>स्थान</span>
+                </h3>
+            </div>
+            <div id="detail-map" style="height:220px;"></div>
+        </div>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
-            const map = L.map('detail-map').setView(
-                [{{ complaint.latitude }}, { { complaint.longitude } }], 15
-                );
+            const map = L.map('detail-map').setView([{{ complaint.latitude }}, {{ complaint.longitude }}], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             L.marker([{{ complaint.latitude }}, {{ complaint.longitude }}]).addTo(map);
         </script>
         {% endif %}
-        <!-- Edit/Delete — sirf owner le dekhinxa -->
-        {% if user == complaint.user %}
-        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
-            <a href="/complaint/{{ complaint.id }}/edit/" class="btn btn-outline" style="font-size:0.9rem;">
-                ✏️ <span data-en>Edit</span><span data-np>सम्पादन</span>
-            </a>
-            <a href="/complaint/{{ complaint.id }}/delete/" class="btn btn-outline"
-                style="font-size:0.9rem; color:#c0392b; border-color:#c0392b;">
-                🗑️ <span data-en>Delete</span><span data-np>मेटाउनुस्</span>
-            </a>
-        </div>
-        {% endif %}
-        <!-- Upvote section -->
-        <div style="display:flex; align-items:center; gap:1rem; padding-top:1rem; border-top:1px solid #eee;">
-            <span style="font-size:1.1rem; font-weight:bold;">
-                👍 {{ upvotes }}
-                <span data-en>people have this problem</span>
-                <span data-np>जनालाई यही समस्या छ</span>
-            </span>
-            {% if user.is_authenticated %}
-            <a href="/upvote/{{ complaint.id }}/"
-                class="btn {% if user_upvoted %}btn-primary{% else %}btn-outline{% endif %}">
-                {% if user_upvoted %}
-                ✓ <span data-en>You upvoted</span><span data-np>तपाईंले भोट दिनुभयो</span>
-                {% else %}
-                <span data-en>Same problem</span><span data-np>मलाई पनि</span>
-                {% endif %}
-            </a>
-            {% else %}
-            <a href="/login/" class="btn btn-outline">
-                <span data-en>Login to upvote</span><span data-np>भोट दिन लगइन गर्नुस्</span>
-            </a>
-            {% endif %}
-        </div>
+
         <!-- Progress Timeline -->
-        <div class="card" style="margin-top:1rem;">
-            <h4 style="margin-bottom:1rem;">
-                📋 <span data-en>Progress Timeline</span>
-                <span data-np>प्रगति विवरण</span>
-            </h4>
+        <div class="card">
+            <h3 style="font-size:1rem; font-weight:600; margin-bottom:1.25rem;">
+                📋 <span data-en>Progress Timeline</span><span data-np>प्रगति विवरण</span>
+            </h3>
 
-            <div style="position:relative; padding-left:1.5rem;">
-
-                <!-- Current status -->
-                <div style="position:relative; margin-bottom:1rem;">
-                    <div
-                        style="position:absolute; left:-1.5rem; top:0.3rem; width:12px; height:12px; border-radius:50%;
-                background:{% if complaint.status == 'resolved' %}#27ae60{% elif complaint.status == 'acknowledged' %}#e67e22{% else %}#c0392b{% endif %};">
+            <div style="position:relative;">
+                <!-- Reported -->
+                <div style="display:flex; gap:1rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="width:36px; height:36px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:white; font-size:0.9rem; flex-shrink:0;">
+                            📝
+                        </div>
+                        {% if complaint.updates.all %}
+                        <div style="width:2px; background:var(--border); flex:1; margin:4px 0;"></div>
+                        {% endif %}
                     </div>
-                    <div style="border-left:2px solid #eee; padding-left:1rem; padding-bottom:1rem;">
-                        <strong>
-                            <span data-en>Reported</span>
-                            <span data-np>दर्ता भयो</span>
+                    <div style="padding-top:0.4rem;">
+                        <strong style="font-size:0.9rem;">
+                            <span data-en>Reported</span><span data-np>दर्ता भयो</span>
                         </strong>
-                        <br>
-                        <small style="color:#888;">{{ complaint.created_at|date:"M d, Y — H:i" }}</small>
-                        <br>
-                        <small style="color:#888;">👤 {{ complaint.user.username }}</small>
+                        <p style="color:var(--text-muted); font-size:0.82rem; margin-top:0.2rem;">
+                            {{ complaint.created_at|date:"M d, Y — H:i" }} · 👤 {{ complaint.user.username }}
+                        </p>
                     </div>
                 </div>
 
                 <!-- Updates -->
                 {% for update in complaint.updates.all %}
-                <div style="position:relative; margin-bottom:1rem;">
-                    <div
-                        style="position:absolute; left:-1.5rem; top:0.3rem; width:12px; height:12px; border-radius:50%;
-                background:{% if update.new_status == 'resolved' %}#27ae60{% elif update.new_status == 'acknowledged' %}#e67e22{% else %}#c0392b{% endif %};">
+                <div style="display:flex; gap:1rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.9rem; flex-shrink:0;
+                            background:{% if update.new_status == 'resolved' %}var(--green){% elif update.new_status == 'acknowledged' %}#2471A3{% else %}var(--red){% endif %};">
+                            {% if update.new_status == 'resolved' %}✓{% elif update.new_status == 'acknowledged' %}⏳{% else %}●{% endif %}
+                        </div>
+                        {% if not forloop.last %}
+                        <div style="width:2px; background:var(--border); flex:1; margin:4px 0;"></div>
+                        {% endif %}
                     </div>
-                    <div style="border-left:2px solid #eee; padding-left:1rem; padding-bottom:1rem;">
-                        <strong>
+                    <div style="padding-top:0.4rem;">
+                        <strong style="font-size:0.9rem;">
                             {{ update.old_status|capfirst }} → {{ update.new_status|capfirst }}
                         </strong>
                         {% if update.note %}
-                        <br><span style="color:#555; font-size:0.9rem;">{{ update.note }}</span>
+                        <p style="color:var(--text); font-size:0.88rem; margin-top:0.2rem; background:var(--bg); padding:0.5rem 0.75rem; border-radius:6px; border-left:3px solid var(--border);">
+                            {{ update.note }}
+                        </p>
                         {% endif %}
-                        <br>
-                        <small style="color:#888;">
-                            📅 {{ update.created_at|date:"M d, Y — H:i" }}
-                            {% if update.updated_by %}&nbsp;|&nbsp; 👤 {{ update.updated_by.username }}{% endif %}
-                        </small>
+                        <p style="color:var(--text-muted); font-size:0.82rem; margin-top:0.2rem;">
+                            {{ update.created_at|date:"M d, Y — H:i" }}
+                            {% if update.updated_by %}· 👤 {{ update.updated_by.username }}{% endif %}
+                        </p>
                     </div>
                 </div>
                 {% endfor %}
 
-                <!-- No updates yet -->
                 {% if not complaint.updates.all %}
-                <div style="color:#999; font-size:0.9rem; padding-left:1rem;">
-                    <span data-en>No updates yet.</span>
+                <p style="color:var(--text-light); font-size:0.88rem; font-style:italic; padding-left:3rem;">
+                    <span data-en>No updates yet. Awaiting response.</span>
                     <span data-np>अहिलेसम्म कुनै अपडेट छैन।</span>
-                </div>
+                </p>
                 {% endif %}
-
             </div>
         </div>
+
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div>
+
+        <!-- Upvote Card -->
+        <div class="card" style="text-align:center; margin-bottom:1rem; border-top:4px solid var(--red);">
+            <div style="font-family:'Fraunces',serif; font-size:3rem; font-weight:700; color:var(--red); line-height:1;" id="upvote-count">
+                {{ upvotes }}
+            </div>
+            <p style="color:var(--text-muted); font-size:0.88rem; margin:0.4rem 0 1rem;">
+                <span data-en>people have this problem</span>
+                <span data-np>जनाले यही समस्या भोगिरहेका छन्</span>
+            </p>
+
+            {% if user.is_authenticated %}
+            <button
+                onclick="toggleUpvote({{ complaint.id }}, this)"
+                id="upvote-btn"
+                class="btn {% if user_upvoted %}btn-primary{% else %}btn-outline{% endif %}"
+                style="width:100%;">
+                {% if user_upvoted %}✓{% else %}👍{% endif %}
+                <span data-en>{% if user_upvoted %}You upvoted{% else %}Same problem{% endif %}</span>
+                <span data-np>{% if user_upvoted %}तपाईंले भोट दिनुभयो{% else %}मलाई पनि{% endif %}</span>
+            </button>
+            {% else %}
+            <a href="/login/" class="btn btn-outline" style="width:100%;">
+                <span data-en>Login to upvote</span>
+                <span data-np>भोट दिन लगइन गर्नुस्</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Info Card -->
+        <div class="card" style="margin-bottom:1rem;">
+            <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:1rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                <span data-en>Details</span><span data-np>विवरण</span>
+            </h4>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                <div>
+                    <span style="font-size:0.78rem; color:var(--text-light); display:block; margin-bottom:0.15rem;">
+                        <span data-en>Province</span><span data-np>प्रदेश</span>
+                    </span>
+                    <span style="font-size:0.9rem; font-weight:500;">
+                        {{ complaint.ward.municipality.district.province.name }}
+                    </span>
+                </div>
+                <div>
+                    <span style="font-size:0.78rem; color:var(--text-light); display:block; margin-bottom:0.15rem;">
+                        <span data-en>District</span><span data-np>जिल्ला</span>
+                    </span>
+                    <span style="font-size:0.9rem; font-weight:500;">
+                        {{ complaint.ward.municipality.district.name }}
+                    </span>
+                </div>
+                <div>
+                    <span style="font-size:0.78rem; color:var(--text-light); display:block; margin-bottom:0.15rem;">
+                        <span data-en>Municipality</span><span data-np>नगरपालिका</span>
+                    </span>
+                    <span style="font-size:0.9rem; font-weight:500;">
+                        {{ complaint.ward.municipality.name }}
+                    </span>
+                </div>
+                <div>
+                    <span style="font-size:0.78rem; color:var(--text-light); display:block; margin-bottom:0.15rem;">
+                        <span data-en>Ward</span><span data-np>वडा</span>
+                    </span>
+                    <span style="font-size:0.9rem; font-weight:500;">
+                        Ward {{ complaint.ward.ward_number }}
+                    </span>
+                </div>
+                <div>
+                    <span style="font-size:0.78rem; color:var(--text-light); display:block; margin-bottom:0.15rem;">
+                        <span data-en>Reported by</span><span data-np>रिपोर्ट गर्नुभएको</span>
+                    </span>
+                    <span style="font-size:0.9rem; font-weight:500;">
+                        {{ complaint.user.username }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Card -->
+        <div class="card" style="text-align:center;">
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                <span data-en>Share this complaint</span>
+                <span data-np>यो उजुरी सेयर गर्नुस्</span>
+            </p>
+            <button onclick="copyLink()" class="btn btn-ghost" style="width:100%; font-size:0.85rem;">
+                🔗 <span data-en>Copy Link</span><span data-np>लिंक कपी</span>
+            </button>
+            <span id="copy-msg" style="display:none; font-size:0.8rem; color:var(--green); margin-top:0.5rem; display:block;"></span>
+        </div>
+
     </div>
 </div>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function toggleUpvote(complaintId, btn) {
+    btn.disabled = true;
+    fetch(`/upvote/${complaintId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('upvote-count').textContent = data.upvote_count;
+        if (data.voted) {
+            btn.classList.remove('btn-outline');
+            btn.classList.add('btn-primary');
+            btn.innerHTML = '✓ <span data-en>You upvoted</span>';
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline');
+            btn.innerHTML = '👍 <span data-en>Same problem</span>';
+        }
+        btn.disabled = false;
+    })
+    .catch(() => { btn.disabled = false; });
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const msg = document.getElementById('copy-msg');
+        msg.textContent = '✓ Link copied!';
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    });
+}
+</script>
 
 {% endblock %}

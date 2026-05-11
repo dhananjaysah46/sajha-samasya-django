@@ -1,29 +1,51 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card" style="max-width:500px; margin:0 auto; text-align:center;">
-    <h2 style="margin-bottom:1rem; color:#c0392b;">
-        <span data-en>Delete Complaint?</span>
-        <span data-np>उजुरी मेटाउने?</span>
-    </h2>
 
-    <p style="color:#666; margin-bottom:1.5rem;">
-        "<strong>{{ complaint.title }}</strong>"
-        <br><br>
-        <span data-en>This action cannot be undone.</span>
-        <span data-np>यो कार्य फिर्ता गर्न सकिँदैन।</span>
-    </p>
+<div style="max-width:480px; margin:3rem auto;">
+    <div class="card" style="text-align:center; border-top:4px solid var(--red);">
 
-    <form method="POST" style="display:flex; gap:1rem; justify-content:center;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger" style="padding:0.8rem 2rem;">
-            <span data-en>Yes, Delete</span>
-            <span data-np>हो, मेटाउनुस्</span>
-        </button>
-        <a href="/complaint/{{ complaint.id }}/" class="btn btn-outline" style="padding:0.8rem 2rem;">
-            <span data-en>Cancel</span>
-            <span data-np>रद्द गर्नुस्</span>
-        </a>
-    </form>
+        <div style="width:64px; height:64px; background:var(--red-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.25rem;">
+            🗑️
+        </div>
+
+        <h2 style="font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; margin-bottom:0.5rem; color:var(--text);">
+            <span data-en>Delete Complaint?</span>
+            <span data-np>उजुरी मेटाउने?</span>
+        </h2>
+
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem;">
+            <span data-en>You are about to delete:</span>
+            <span data-np>तपाईं यो मेटाउन लाग्नुहुन्छ:</span>
+        </p>
+
+        <div style="background:var(--bg); border-radius:var(--radius-sm); padding:0.85rem 1rem; margin-bottom:1.5rem; border:1px solid var(--border);">
+            <strong style="font-size:0.95rem;">{{ complaint.title }}</strong>
+            <br>
+            <small style="color:var(--text-muted);">
+                📍 {{ complaint.ward }} · {{ complaint.created_at|date:"M d, Y" }}
+            </small>
+        </div>
+
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">
+            <span data-en>⚠ This action cannot be undone. All upvotes will also be deleted.</span>
+            <span data-np>⚠ यो कार्य फिर्ता गर्न सकिँदैन। सबै भोटहरू पनि मेटिनेछन्।</span>
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display:flex; gap:0.75rem;">
+                <a href="/complaint/{{ complaint.id }}/" class="btn btn-ghost" style="flex:1; padding:0.85rem; text-align:center;">
+                    <span data-en>Cancel</span>
+                    <span data-np>रद्द गर्नुस्</span>
+                </a>
+                <button type="submit" class="btn btn-danger" style="flex:1; padding:0.85rem;">
+                    <span data-en>Yes, Delete</span>
+                    <span data-np>हो, मेटाउनुस्</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
 {% endblock %}

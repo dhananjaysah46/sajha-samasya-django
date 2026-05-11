@@ -1,187 +1,551 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sajha Samasya</title>
+    <title>साझा समस्या — Sajha Samasya</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --red:       #C0392B;
+            --red-dark:  #96281B;
+            --red-light: #F9ECEB;
+            --green:     #1E8449;
+            --green-light: #E9F7EF;
+            --orange:    #D68910;
+            --orange-light: #FEF9E7;
+            --bg:        #F7F3EE;
+            --surface:   #FFFFFF;
+            --border:    #E8E0D8;
+            --text:      #1A1410;
+            --text-muted:#7A6F66;
+            --text-light:#B0A89E;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius:    12px;
+            --radius-sm: 8px;
         }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: 'Mukta', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
         }
 
+        /* ── NAV ── */
         nav {
-            background: #c0392b;
-            padding: 1rem 2rem;
+            background: var(--red);
+            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(192,57,43,0.3);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
             color: white;
         }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
+        .nav-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.2rem;
         }
 
-        nav .nav-links a {
-            margin-left: 1rem;
-            font-size: 0.95rem;
-            font-weight: normal;
+        .nav-brand-text {
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+        .nav-brand-sub {
+            font-size: 0.7rem;
+            opacity: 0.75;
+            display: block;
+            margin-top: -4px;
+            font-family: 'Mukta', sans-serif;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 0.5rem 1.2rem;
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
             border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-user {
+            color: rgba(255,255,255,0.88);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-avatar {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .lang-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Mukta', sans-serif;
+            transition: all 0.15s;
+            margin-left: 0.5rem;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* ── LAYOUT ── */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-complaint {
+            cursor: pointer;
+        }
+
+        .card-complaint:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: var(--radius-sm);
             border: none;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: 'Mukta', sans-serif;
             text-decoration: none;
+            transition: all 0.15s;
+            white-space: nowrap;
         }
 
         .btn-primary {
-            background: #c0392b;
+            background: var(--red);
             color: white;
+            box-shadow: 0 2px 8px rgba(192,57,43,0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--red-dark);
+            box-shadow: 0 4px 12px rgba(192,57,43,0.4);
+            transform: translateY(-1px);
         }
 
         .btn-outline {
             background: transparent;
-            border: 2px solid #c0392b;
-            color: #c0392b;
+            color: var(--red);
+            border: 1.5px solid var(--red);
         }
 
-        .btn:hover {
-            opacity: 0.85;
+        .btn-outline:hover {
+            background: var(--red-light);
         }
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        .btn-ghost {
+            background: var(--bg);
+            color: var(--text-muted);
+            border: 1.5px solid var(--border);
         }
 
-        .error {
-            background: #fde;
-            color: #c0392b;
-            padding: 0.8rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
+        .btn-ghost:hover {
+            background: var(--border);
+            color: var(--text);
         }
 
-        /* Language toggle */
-        .lang-toggle {
-            background: white;
-            color: #c0392b;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 1rem;
-        }
-
-        [data-np] {
-            display: none;
-        }
-
-        body.nepali [data-en] {
-            display: none;
-        }
-
-        body.nepali [data-np] {
-            display: inline;
-        }
-        /* Danger button — delete ko lagi */
         .btn-danger {
-            background: #c0392b;
+            background: var(--red);
             color: white;
-            border: none;
         }
-        .btn-danger:hover { opacity: 0.85; }
 
-        /* Status badges consistent */
-        .badge-open { background:#fde; color:#c0392b; }
-        .badge-acknowledged { background:#fef9e7; color:#e67e22; }
-        .badge-resolved { background:#d5f5e3; color:#27ae60; }
+        .btn-danger:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            gap: 0.3rem;
+        }
+
+        .badge-category {
+            background: var(--red-light);
+            color: var(--red);
+        }
+
+        .badge-open {
+            background: #FEF3E2;
+            color: #D68910;
+        }
+
+        .badge-acknowledged {
+            background: #EBF5FB;
+            color: #2471A3;
+        }
+
+        .badge-resolved {
+            background: var(--green-light);
+            color: var(--green);
+        }
+
+        /* ── FORMS ── */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: 'Mukta', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--red);
+            background: var(--red-light);
+        }
+
+        .form-error {
+            color: var(--red);
+            font-size: 0.82rem;
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A6F66' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        /* ── ALERTS ── */
+        .alert {
+            padding: 0.9rem 1.2rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-error {
+            background: var(--red-light);
+            color: var(--red);
+            border: 1px solid rgba(192,57,43,0.2);
+        }
+
+        .alert-success {
+            background: var(--green-light);
+            color: var(--green);
+            border: 1px solid rgba(30,132,73,0.2);
+        }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .page-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        /* ── DIVIDER ── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.2rem 0;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        /* ── STATS CARD ── */
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.2rem 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── LANGUAGE TOGGLE ── */
+        [data-np] { display: none; }
+        body.nepali [data-en] { display: none; }
+        body.nepali [data-np] { display: inline; }
+
+        /* ── FOOTER ── */
+        footer {
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            nav { padding: 0 1rem; }
+            .nav-brand-sub { display: none; }
+            .container { padding: 1.25rem 1rem; }
+            .page-title { font-size: 1.4rem; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: fadeUp 0.3s ease forwards;
+        }
+
+        .card { animation: fadeUp 0.3s ease forwards; }
     </style>
 </head>
-
 <body>
-    <nav>
-        <a href="/">
-            <span data-en>Sajha Samasya</span>
-            <span data-np>साझा समस्या</span>
+
+<nav>
+    <a href="/" class="nav-brand">
+        <div class="nav-brand-icon">🏛️</div>
+        <div>
+            <span class="nav-brand-text">
+                <span data-en>Sajha Samasya</span>
+                <span data-np>साझा समस्या</span>
+            </span>
+            <span class="nav-brand-sub">
+                <span data-en>Nepal Civic Platform</span>
+                <span data-np>नेपाल नागरिक मञ्च</span>
+            </span>
+        </div>
+    </a>
+
+    <div class="nav-links">
+        <a href="/map/" class="nav-link">
+            <span data-en>🗺️ Map</span>
+            <span data-np>🗺️ नक्सा</span>
         </a>
-        <div class="nav-links">
-            {% if user.is_authenticated %}
-            <a href="/profile/" style="color:white; text-decoration: none;">
-                <span data-en>Hello,</span>
-                <span data-np>नमस्ते,</span>
-                {{ user.username }}
-            </a>
-            <a href="/submit/">
+        <a href="/dashboard/" class="nav-link">
+            <span data-en>📊 Dashboard</span>
+            <span data-np>📊 ड्यासबोर्ड</span>
+        </a>
+
+        {% if user.is_authenticated %}
+            <a href="/submit/" class="nav-link">
                 <span data-en>+ Report</span>
                 <span data-np>+ रिपोर्ट</span>
             </a>
-            <a href="/logout/">
+            <a href="/profile/" class="nav-link">
+                <div class="nav-avatar">{{ user.username|first|upper }}</div>
+            </a>
+            <a href="/logout/" class="nav-link">
                 <span data-en>Logout</span>
-                <span data-np>बाहिर निस्कनुस्</span>
+                <span data-np>बाहिर</span>
             </a>
-            <a href="/map/">
-                <span data-en>🗺️ Map</span>
-                <span data-np>🗺️ नक्सा</span>
-            </a>
-            {% else %}
-            <a href="/login/">
+        {% else %}
+            <a href="/login/" class="nav-link">
                 <span data-en>Login</span>
                 <span data-np>लगइन</span>
             </a>
-            <a href="/register/">
+            <a href="/register/" class="nav-link">
                 <span data-en>Register</span>
                 <span data-np>दर्ता</span>
             </a>
-            {% endif %}
-            <button class="lang-toggle" onclick="toggleLang()">नेपाली</button>
-        </div>
-    </nav>
+        {% endif %}
 
-    <div class="container">
-        {% block content %}{% endblock %}
+        <button class="lang-btn" onclick="toggleLang()">नेपाली</button>
     </div>
+</nav>
 
-    <script>
-        function toggleLang() {
-            document.body.classList.toggle('nepali');
-            const btn = document.querySelector('.lang-toggle');
-            btn.textContent = document.body.classList.contains('nepali') ? 'English' : 'नेपाली';
-            localStorage.setItem('lang', document.body.classList.contains('nepali') ? 'np' : 'en');
-        }
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
 
-        // Remember language preference
-        if (localStorage.getItem('lang') === 'np') {
-            document.body.classList.add('nepali');
-            document.querySelector('.lang-toggle').textContent = 'English';
-        }
-    </script>
+<footer>
+    <p>
+        <span data-en>Sajha Samasya — Built for Nepal's citizens 🇳🇵</span>
+        <span data-np>साझा समस्या — नेपालका नागरिकहरूका लागि 🇳🇵</span>
+    </p>
+</footer>
+
+<script>
+function toggleLang() {
+    document.body.classList.toggle('nepali');
+    const btn = document.querySelector('.lang-btn');
+    const isNepali = document.body.classList.contains('nepali');
+    btn.textContent = isNepali ? 'English' : 'नेपाली';
+    localStorage.setItem('lang', isNepali ? 'np' : 'en');
+}
+
+if (localStorage.getItem('lang') === 'np') {
+    document.body.classList.add('nepali');
+    document.querySelector('.lang-btn').textContent = 'English';
+}
+</script>
+
 </body>
-
 </html>

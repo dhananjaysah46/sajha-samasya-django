@@ -1,29 +1,95 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="card" style="max-width:400px; margin:0 auto;">
-    <h2 style="margin-bottom:1.5rem;">
-        <span data-en>Register</span>
-        <span data-np>दर्ता गर्नुस्</span>
-    </h2>
-    {% if error %}<div class="error">{{ error }}</div>{% endif %}
-    <form method="POST">
-        {% csrf_token %}
-        <div style="margin-bottom:1rem;">
-            <label>Username</label><br>
-            <input type="text" name="username" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+
+<div style="max-width:420px; margin:3rem auto;">
+
+    <!-- Header -->
+    <div style="text-align:center; margin-bottom:2rem;">
+        <div style="width:60px; height:60px; background:var(--red); border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1rem;">
+            🏛️
         </div>
-        <div style="margin-bottom:1rem;">
-            <label>Email</label><br>
-            <input type="email" name="email" style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
-        </div>
-        <div style="margin-bottom:1.5rem;">
-            <label>Password</label><br>
-            <input type="password" name="password" required style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.8rem;">
-            <span data-en>Create Account</span>
-            <span data-np>खाता बनाउनुस्</span>
-        </button>
-    </form>
+        <h1 class="page-title">
+            <span data-en>Join Sajha Samasya</span>
+            <span data-np>साझा समस्यामा सामेल हुनुस्</span>
+        </h1>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.4rem;">
+            <span data-en>Create an account to report local problems</span>
+            <span data-np>स्थानीय समस्या रिपोर्ट गर्न खाता बनाउनुस्</span>
+        </p>
+    </div>
+
+    <div class="card">
+        {% if error %}
+        <div class="alert alert-error">⚠ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Username</span>
+                    <span data-np>प्रयोगकर्ता नाम</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <input type="text" name="username" required autofocus
+                    class="form-input"
+                    placeholder="your_username">
+                <p style="color:var(--text-light); font-size:0.8rem; margin-top:0.3rem;">
+                    <span data-en>Letters, numbers, and underscores only</span>
+                    <span data-np>अक्षर, नम्बर र अन्डरस्कोर मात्र</span>
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Email</span>
+                    <span data-np>इमेल</span>
+                    <span style="color:var(--text-light); font-weight:400; font-size:0.82rem; margin-left:0.3rem;">
+                        (<span data-en>optional</span><span data-np>ऐच्छिक</span>)
+                    </span>
+                </label>
+                <input type="email" name="email"
+                    class="form-input"
+                    placeholder="you@example.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Password</span>
+                    <span data-np>पासवर्ड</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <input type="password" name="password" required
+                    class="form-input"
+                    placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.85rem; font-size:1rem; margin-top:0.5rem;">
+                <span data-en>Create Account</span>
+                <span data-np>खाता बनाउनुस्</span>
+            </button>
+        </form>
+
+        <hr class="divider" style="margin:1.5rem 0;">
+
+        <p style="text-align:center; color:var(--text-muted); font-size:0.9rem;">
+            <span data-en>Already have an account?</span>
+            <span data-np>खाता छ?</span>
+            <a href="/login/" style="color:var(--red); font-weight:600; text-decoration:none;">
+                <span data-en>Login here</span>
+                <span data-np>यहाँ लगइन गर्नुस्</span>
+            </a>
+        </p>
+    </div>
+
+    <p style="text-align:center; margin-top:1.5rem;">
+        <a href="/" style="color:var(--text-muted); font-size:0.85rem; text-decoration:none;">
+            ← <span data-en>Back to home</span><span data-np>गृहपृष्ठमा फर्कनुस्</span>
+        </a>
+    </p>
+
 </div>
+
 {% endblock %}

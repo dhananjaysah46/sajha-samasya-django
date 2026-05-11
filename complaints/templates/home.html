@@ -2,165 +2,209 @@
 
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-    <h2>
-        <span data-en>Community Complaints</span>
-        <span data-np>सामुदायिक समस्याहरू</span>
-    </h2>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <span data-en>Community Complaints</span>
+            <span data-np>सामुदायिक समस्याहरू</span>
+        </h1>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.3rem;">
+            <span data-en>Report local problems. Support your neighbors. Track progress.</span>
+            <span data-np>स्थानीय समस्या रिपोर्ट गर्नुस्। छिमेकीलाई समर्थन गर्नुस्।</span>
+        </p>
+    </div>
     {% if user.is_authenticated %}
     <a href="/submit/" class="btn btn-primary">
-        <span data-en>+ Report Problem</span>
-        <span data-np>+ समस्या रिपोर्ट गर्नुस्</span>
+        + <span data-en>Report Problem</span>
+        <span data-np>समस्या रिपोर्ट</span>
+    </a>
+    {% else %}
+    <a href="/login/" class="btn btn-outline">
+        <span data-en>Login to Report</span>
+        <span data-np>रिपोर्ट गर्न लगइन</span>
     </a>
     {% endif %}
 </div>
 
-<!-- Search Bar -->
-<form method="GET" style="margin-bottom:1rem;">
-    {% if request.GET.category %}
-        <input type="hidden" name="category" value="{{ request.GET.category }}">
-    {% endif %}
-    {% if request.GET.district %}
-        <input type="hidden" name="district" value="{{ request.GET.district }}">
-    {% endif %}
-    <div style="display:flex; gap:0.5rem;">
-        <input
-            type="text"
-            name="search"
-            value="{{ search }}"
-            placeholder="Search complaints... / उजुरी खोज्नुस्..."
-            style="flex:1; padding:0.7rem 1rem; border:1px solid #ddd; border-radius:6px; font-size:1rem;">
-        <button type="submit" class="btn btn-primary" style="padding:0.7rem 1.2rem;">🔍</button>
+<!-- Search + Filters -->
+<div class="card" style="margin-bottom:1.5rem; padding:1.25rem;">
+    <form method="GET">
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <div style="position:relative; flex:1;">
+                <span style="position:absolute; left:0.9rem; top:50%; transform:translateY(-50%); color:var(--text-light);">🔍</span>
+                <input type="text" name="search" value="{{ search }}"
+                    placeholder="Search complaints... / उजुरी खोज्नुस्..."
+                    class="form-input" style="padding-left:2.5rem;">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span data-en>Search</span><span data-np>खोज</span>
+            </button>
+            {% if search %}
+                <a href="/" class="btn btn-ghost">✕</a>
+            {% endif %}
+        </div>
+
         {% if search %}
-            <a href="/" class="btn btn-outline" style="padding:0.7rem 1rem;">✕</a>
-        {% endif %}
-    </div>
-    {% if search %}
-        <p style="margin-top:0.5rem; color:#888; font-size:0.9rem;">
-            <span data-en>Results for: <strong>"{{ search }}"</strong></span>
-            <span data-np>खोज परिणाम: <strong>"{{ search }}"</strong></span>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.75rem;">
+            <span data-en>Results for <strong style="color:var(--text);">"{{ search }}"</strong></span>
+            <span data-np>खोज परिणाम: <strong style="color:var(--text);">"{{ search }}"</strong></span>
         </p>
-    {% endif %}
-</form>
-
-<!-- Filters -->
-<div class="card" style="display:flex; gap:1rem; flex-wrap:wrap;">
-    <form method="GET" style="display:flex; gap:1rem; flex-wrap:wrap; width:100%;">
-        {% if search %}
-            <input type="hidden" name="search" value="{{ search }}">
         {% endif %}
 
-        <!-- Category filter -->
-        <select name="category" onchange="this.form.submit()"
-            style="padding:0.5rem; border-radius:6px; border:1px solid #ddd;">
-            <option value="">All Categories / सबै वर्ग</option>
-            <option value="water"       {% if request.GET.category == 'water' %}selected{% endif %}>Khane Pani / खाने पानी</option>
-            <option value="road"        {% if request.GET.category == 'road' %}selected{% endif %}>Bato / बाटो</option>
-            <option value="electricity" {% if request.GET.category == 'electricity' %}selected{% endif %}>Bijuli / बिजुली</option>
-            <option value="waste"       {% if request.GET.category == 'waste' %}selected{% endif %}>Fohor / फोहोर</option>
-            <option value="other"       {% if request.GET.category == 'other' %}selected{% endif %}>Aru / अरु</option>
-        </select>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600;">
+                <span data-en>Filter:</span><span data-np>छान्नुस्:</span>
+            </span>
 
-        <!-- District filter — 77 districts matra, 6000 wards hoina! -->
-        <select name="district" onchange="this.form.submit()"
-            style="padding:0.5rem; border-radius:6px; border:1px solid #ddd;">
-            <option value="">All Districts / सबै जिल्ला</option>
-            {% for district in districts %}
+            <select name="category" onchange="this.form.submit()" class="form-input" style="width:auto; padding:0.45rem 2rem 0.45rem 0.8rem;">
+                <option value="">All Categories / सबै</option>
+                <option value="water"       {% if request.GET.category == 'water' %}selected{% endif %}>💧 Khane Pani</option>
+                <option value="road"        {% if request.GET.category == 'road' %}selected{% endif %}>🛣️ Bato</option>
+                <option value="electricity" {% if request.GET.category == 'electricity' %}selected{% endif %}>⚡ Bijuli</option>
+                <option value="waste"       {% if request.GET.category == 'waste' %}selected{% endif %}>🗑️ Fohor</option>
+                <option value="other"       {% if request.GET.category == 'other' %}selected{% endif %}>📌 Aru</option>
+            </select>
+
+            <select name="district" onchange="this.form.submit()" class="form-input" style="width:auto; padding:0.45rem 2rem 0.45rem 0.8rem;">
+                <option value="">All Districts / सबै जिल्ला</option>
+                {% for district in districts %}
                 <option value="{{ district.id }}" {% if request.GET.district == district.id|stringformat:"s" %}selected{% endif %}>
-                    {{ district.name }} — {{ district.name_np }}
+                    {{ district.name }}
                 </option>
-            {% endfor %}
-        </select>
+                {% endfor %}
+            </select>
+
+            <select name="sort" onchange="this.form.submit()" class="form-input" style="width:auto; padding:0.45rem 2rem 0.45rem 0.8rem;">
+                <option value="newest"       {% if sort == 'newest' %}selected{% endif %}>🕐 Newest</option>
+                <option value="oldest"       {% if sort == 'oldest' %}selected{% endif %}>🕰️ Oldest</option>
+                <option value="most_upvoted" {% if sort == 'most_upvoted' %}selected{% endif %}>👍 Most Upvoted</option>
+            </select>
+
+            {% if request.GET.category or request.GET.district %}
+            <a href="/?sort={{ sort }}{% if search %}&search={{ search }}{% endif %}"
+               style="font-size:0.82rem; color:var(--red); text-decoration:none;">
+                ✕ <span data-en>Clear filters</span><span data-np>फिल्टर हटाउनुस्</span>
+            </a>
+            {% endif %}
+
+            {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        </div>
     </form>
 </div>
 
+<!-- Results count -->
+{% if complaints.paginator.count > 0 %}
+<p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">
+    <span data-en>Showing {{ complaints.paginator.count }} complaint{{ complaints.paginator.count|pluralize }}</span>
+    <span data-np>{{ complaints.paginator.count }} उजुरी</span>
+</p>
+{% endif %}
+
 <!-- Complaints List -->
 {% for complaint in complaints %}
-<div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:start;">
-        <div>
-            <span style="background:#fde; color:#c0392b; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.8rem;">
+<div class="card card-complaint" onclick="window.location='/complaint/{{ complaint.id }}/'">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <span class="badge badge-category">
+                {% if complaint.category == 'water' %}💧
+                {% elif complaint.category == 'road' %}🛣️
+                {% elif complaint.category == 'electricity' %}⚡
+                {% elif complaint.category == 'waste' %}🗑️
+                {% else %}📌{% endif %}
                 {{ complaint.get_category_display }}
             </span>
-            <span style="padding:0.2rem 0.7rem; border-radius:20px; font-size:0.8rem; margin-left:0.5rem;
-                {% if complaint.status == 'resolved' %}background:#d5f5e3; color:#27ae60;
-                {% elif complaint.status == 'acknowledged' %}background:#fef9e7; color:#e67e22;
-                {% else %}background:#eee; color:#888;
-                {% endif %}">
+            <span class="badge {% if complaint.status == 'resolved' %}badge-resolved{% elif complaint.status == 'acknowledged' %}badge-acknowledged{% else %}badge-open{% endif %}">
+                {% if complaint.status == 'resolved' %}✓{% elif complaint.status == 'acknowledged' %}⏳{% else %}●{% endif %}
                 {{ complaint.get_status_display }}
             </span>
         </div>
-        <small style="color:#999;">{{ complaint.created_at|date:"M d, Y" }}</small>
+        <small style="color:var(--text-light); font-size:0.8rem; white-space:nowrap; margin-left:1rem;">
+            {{ complaint.created_at|date:"M d, Y" }}
+        </small>
     </div>
 
-    <h3 style="margin:0.8rem 0 0.4rem;">
-        <a href="/complaint/{{ complaint.id }}/" style="text-decoration:none; color:#333;">
-            {{ complaint.title }}
-        </a>
+    <h3 style="font-family:'Fraunces',serif; font-size:1.1rem; font-weight:600; margin-bottom:0.4rem; color:var(--text); letter-spacing:-0.01em;">
+        {{ complaint.title }}
     </h3>
-    <p style="color:#666; font-size:0.95rem;">{{ complaint.description }}</p>
+    <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.5; margin-bottom:0.8rem;">
+        {{ complaint.description|truncatechars:120 }}
+    </p>
 
     {% if complaint.photo %}
-        <img src="{{ complaint.photo.url }}"
-            style="width:100%; max-height:200px; object-fit:cover; border-radius:6px; margin-top:0.8rem;">
+    <img src="{{ complaint.photo.url }}"
+        style="width:100%; max-height:180px; object-fit:cover; border-radius:8px; margin-bottom:0.8rem;">
     {% endif %}
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
-        <small style="color:#888;">
-            📍 {{ complaint.ward.municipality }} - Ward {{ complaint.ward.ward_number }}
-            &nbsp;|&nbsp; 👤 {{ complaint.user.username }}
-        </small>
+    <hr class="divider" style="margin:0.75rem 0;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <span style="color:var(--text-muted); font-size:0.82rem;">
+                📍 {{ complaint.ward.municipality }} · Ward {{ complaint.ward.ward_number }}
+            </span>
+            <span style="color:var(--text-muted); font-size:0.82rem;">
+                👤 {{ complaint.user.username }}
+            </span>
+        </div>
         <button
-            onclick="toggleUpvote({{ complaint.id }}, this)"
-            class="btn btn-outline"
-            style="font-size:0.85rem;"
+            onclick="event.stopPropagation(); toggleUpvote({{ complaint.id }}, this)"
+            class="btn btn-sm btn-outline"
             data-complaint-id="{{ complaint.id }}">
             👍 <span class="upvote-count-{{ complaint.id }}">{{ complaint.upvotes.count }}</span>
-            <span data-en>Same problem</span>
+            <span data-en>Same issue</span>
             <span data-np>मलाई पनि</span>
         </button>
     </div>
 </div>
 {% empty %}
-<div class="card" style="text-align:center; color:#999; padding:3rem;">
-    <p>
-        <span data-en>No complaints yet. Be the first to report!</span>
-        <span data-np>अहिलेसम्म कुनै समस्या छैन। पहिलो रिपोर्ट गर्नुस्!</span>
+<div class="card empty-state">
+    <div class="empty-state-icon">📭</div>
+    <h3>
+        <span data-en>No complaints found</span>
+        <span data-np>कुनै उजुरी भेटिएन</span>
+    </h3>
+    <p style="font-size:0.9rem; margin:0.5rem 0 1.5rem;">
+        {% if search or request.GET.category or request.GET.district %}
+            <span data-en>Try adjusting your filters</span>
+            <span data-np>फिल्टर परिवर्तन गरेर हेर्नुस्</span>
+        {% else %}
+            <span data-en>Be the first to report a problem!</span>
+            <span data-np>पहिलो समस्या रिपोर्ट गर्नुस्!</span>
+        {% endif %}
     </p>
+    {% if user.is_authenticated %}
+    <a href="/submit/" class="btn btn-primary">
+        + <span data-en>Report a Problem</span><span data-np>समस्या रिपोर्ट</span>
+    </a>
+    {% endif %}
 </div>
 {% endfor %}
 
 <!-- Pagination -->
 {% if complaints.has_other_pages %}
-<div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1.5rem; flex-wrap:wrap;">
-
+<div style="display:flex; justify-content:center; align-items:center; gap:0.4rem; margin-top:2rem; flex-wrap:wrap;">
     {% if complaints.has_previous %}
-        <a href="?page={{ complaints.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
-            class="btn btn-outline">
-            ← <span data-en>Previous</span><span data-np>अघिल्लो</span>
-        </a>
+    <a href="?page={{ complaints.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+        class="btn btn-ghost btn-sm">← <span data-en>Previous</span><span data-np>अघिल्लो</span></a>
     {% endif %}
 
     {% for num in complaints.paginator.page_range %}
         {% if complaints.number == num %}
-            <span class="btn btn-primary">{{ num }}</span>
+            <span class="btn btn-primary btn-sm">{{ num }}</span>
         {% elif num > complaints.number|add:'-3' and num < complaints.number|add:'3' %}
-            <a href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
-                class="btn btn-outline">{{ num }}</a>
+            <a href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                class="btn btn-ghost btn-sm">{{ num }}</a>
         {% endif %}
     {% endfor %}
 
     {% if complaints.has_next %}
-        <a href="?page={{ complaints.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
-            class="btn btn-outline">
-            <span data-en>Next</span><span data-np>अर्को</span> →
-        </a>
+    <a href="?page={{ complaints.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.district %}&district={{ request.GET.district }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+        class="btn btn-ghost btn-sm"><span data-en>Next</span><span data-np>अर्को</span> →</a>
     {% endif %}
-
 </div>
-<p style="text-align:center; color:#888; margin-top:0.8rem; font-size:0.9rem;">
-    <span data-en>Page {{ complaints.number }} of {{ complaints.paginator.num_pages }} — {{ complaints.paginator.count }} total</span>
-    <span data-np>पृष्ठ {{ complaints.number }} / {{ complaints.paginator.num_pages }} — जम्मा {{ complaints.paginator.count }}</span>
+<p style="text-align:center; color:var(--text-light); font-size:0.82rem; margin-top:0.75rem;">
+    <span data-en>Page {{ complaints.number }} of {{ complaints.paginator.num_pages }}</span>
+    <span data-np>पृष्ठ {{ complaints.number }} / {{ complaints.paginator.num_pages }}</span>
 </p>
 {% endif %}
 
@@ -169,19 +213,11 @@ const isLoggedIn = {% if user.is_authenticated %}true{% else %}false{% endif %};
 const csrfToken = '{{ csrf_token }}';
 
 function toggleUpvote(complaintId, btn) {
-    if (!isLoggedIn) {
-        window.location.href = '/login/';
-        return;
-    }
-
+    if (!isLoggedIn) { window.location.href = '/login/'; return; }
     btn.disabled = true;
-
     fetch(`/upvote/${complaintId}/`, {
         method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json',
-        },
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
     })
     .then(res => res.json())
     .then(data => {
@@ -195,9 +231,7 @@ function toggleUpvote(complaintId, btn) {
         }
         btn.disabled = false;
     })
-    .catch(() => {
-        btn.disabled = false;
-    });
+    .catch(() => { btn.disabled = false; });
 }
 </script>
 

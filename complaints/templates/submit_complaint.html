@@ -1,210 +1,253 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card" style="max-width:600px; margin:0 auto;">
-    <h2 style="margin-bottom:1.5rem;">
-        <span data-en>Report a Problem</span>
-        <span data-np>समस्या रिपोर्ट गर्नुस्</span>
-    </h2>
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+<div style="max-width:680px; margin:0 auto;">
 
-        <!-- Title -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Title</span>
-                <span data-np>शीर्षक</span>
-            </label><br>
-            <input type="text" name="title" required
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
+    <div class="page-header" style="margin-bottom:1.5rem;">
+        <div>
+            <h1 class="page-title">
+                <span data-en>Report a Problem</span>
+                <span data-np>समस्या रिपोर्ट गर्नुस्</span>
+            </h1>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.3rem;">
+                <span data-en>Help your community by reporting local issues</span>
+                <span data-np>स्थानीय समस्या रिपोर्ट गरेर समुदायलाई मद्दत गर्नुस्</span>
+            </p>
         </div>
+        <a href="/" class="btn btn-ghost btn-sm">
+            ← <span data-en>Back</span><span data-np>फिर्ता</span>
+        </a>
+    </div>
 
-        <!-- Category -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Category</span>
-                <span data-np>वर्ग</span>
-            </label><br>
-            <select name="category" required
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
-                <option value="water">Khane Pani / खाने पानी</option>
-                <option value="road">Bato / बाटो</option>
-                <option value="electricity">Bijuli / बिजुली</option>
-                <option value="waste">Fohor / फोहोर</option>
-                <option value="other">Aru / अरु</option>
-            </select>
-        </div>
+    <div class="card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- Province -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Province</span>
-                <span data-np>प्रदेश</span>
-            </label><br>
-            <select id="province" 
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;">
-                <option value="">-- Select Province / प्रदेश छान्नुस् --</option>
-                {% for province in provinces %}
-                    <option value="{{ province.id }}">{{ province.name }} — {{ province.name_np }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <!-- Title -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Title</span>
+                    <span data-np>शीर्षक</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <input type="text" name="title"
+                    value="{{ old.title }}"
+                    placeholder="e.g. Khane pani aaudaina Ward 5 ma"
+                    class="form-input {% if errors.title %}error{% endif %}">
+                {% if errors.title %}
+                    <p class="form-error">⚠ {{ errors.title }}</p>
+                {% endif %}
+            </div>
 
-        <!-- District -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>District</span>
-                <span data-np>जिल्ला</span>
-            </label><br>
-            <select id="district" disabled
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
-                <option value="">-- Select District / जिल्ला छान्नुस् --</option>
-            </select>
-        </div>
+            <!-- Category -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Category</span>
+                    <span data-np>वर्ग</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <select name="category" class="form-input {% if errors.category %}error{% endif %}">
+                    <option value="">-- <span data-en>Select category</span> --</option>
+                    <option value="water"       {% if old.category == 'water' %}selected{% endif %}>💧 Khane Pani / खाने पानी</option>
+                    <option value="road"        {% if old.category == 'road' %}selected{% endif %}>🛣️ Bato / बाटो</option>
+                    <option value="electricity" {% if old.category == 'electricity' %}selected{% endif %}>⚡ Bijuli / बिजुली</option>
+                    <option value="waste"       {% if old.category == 'waste' %}selected{% endif %}>🗑️ Fohor / फोहोर</option>
+                    <option value="other"       {% if old.category == 'other' %}selected{% endif %}>📌 Aru / अरु</option>
+                </select>
+                {% if errors.category %}
+                    <p class="form-error">⚠ {{ errors.category }}</p>
+                {% endif %}
+            </div>
 
-        <!-- Municipality -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Municipality</span>
-                <span data-np>नगरपालिका</span>
-            </label><br>
-            <select id="municipality" disabled
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
-                <option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>
-            </select>
-        </div>
+            <!-- Location — Cascading -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Location</span>
+                    <span data-np>स्थान</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <!-- Province -->
+                    <select id="province" class="form-input">
+                        <option value="">🏔️ Province / प्रदेश</option>
+                        {% for province in provinces %}
+                            <option value="{{ province.id }}">{{ province.name }}</option>
+                        {% endfor %}
+                    </select>
 
-        <!-- Ward -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Ward</span>
-                <span data-np>वडा</span>
-            </label><br>
-            <select id="ward-display" name="ward" required disabled
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem; background:#f9f9f9;">
-                <option value="">-- Select Ward / वडा छान्नुस् --</option>
-            </select>
-        </div>
+                    <!-- District -->
+                    <select id="district" class="form-input" disabled style="opacity:0.6;">
+                        <option value="">🗺️ District / जिल्ला</option>
+                    </select>
 
-        <!-- Description -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Description</span>
-                <span data-np>विवरण</span>
-            </label><br>
-            <textarea name="description" rows="4" required
-                style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:6px; margin-top:0.3rem;"></textarea>
-        </div>
+                    <!-- Municipality -->
+                    <select id="municipality" class="form-input" disabled style="opacity:0.6;">
+                        <option value="">🏛️ Municipality / नगरपालिका</option>
+                    </select>
 
-        <!-- Photo -->
-        <div style="margin-bottom:1rem;">
-            <label>
-                <span data-en>Photo (optional)</span>
-                <span data-np>फोटो (ऐच्छिक)</span>
-            </label><br>
-            <input type="file" name="photo" accept="image/*" style="margin-top:0.3rem;">
-        </div>
+                    <!-- Ward -->
+                    <select id="ward-display" name="ward" class="form-input {% if errors.ward %}error{% endif %}" disabled style="opacity:0.6;">
+                        <option value="">🔢 Ward / वडा</option>
+                    </select>
+                </div>
+                {% if errors.ward %}
+                    <p class="form-error">⚠ {{ errors.ward }}</p>
+                {% endif %}
+            </div>
 
-        <!-- GPS -->
-        <input type="hidden" name="latitude" id="lat">
-        <input type="hidden" name="longitude" id="lng">
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Description</span>
+                    <span data-np>विवरण</span>
+                    <span style="color:var(--red);">*</span>
+                </label>
+                <textarea name="description" rows="4"
+                    placeholder="Describe the problem in detail..."
+                    class="form-input {% if errors.description %}error{% endif %}"
+                    style="resize:vertical;">{{ old.description }}</textarea>
+                {% if errors.description %}
+                    <p class="form-error">⚠ {{ errors.description }}</p>
+                {% endif %}
+            </div>
 
-        <button type="button" onclick="getLocation()" class="btn btn-outline" style="margin-bottom:1rem;">
-            📍
-            <span data-en>Get My Location</span>
-            <span data-np>मेरो स्थान पत्ता लगाउनुस्</span>
-        </button>
-        <span id="loc-status" style="font-size:0.85rem; color:#27ae60;"></span>
+            <!-- Photo -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>Photo</span>
+                    <span data-np>फोटो</span>
+                    <span style="color:var(--text-light); font-weight:400; font-size:0.82rem; margin-left:0.3rem;">
+                        (<span data-en>optional, max 5MB</span><span data-np>ऐच्छिक, अधिकतम ५MB</span>)
+                    </span>
+                </label>
+                <div style="border:2px dashed var(--border); border-radius:var(--radius-sm); padding:1.5rem; text-align:center; background:var(--bg); cursor:pointer;" onclick="document.getElementById('photo-input').click()">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">📷</div>
+                    <p style="color:var(--text-muted); font-size:0.88rem;">
+                        <span data-en>Click to upload photo</span>
+                        <span data-np>फोटो अपलोड गर्न क्लिक गर्नुस्</span>
+                    </p>
+                    <p id="file-name" style="color:var(--text-light); font-size:0.8rem; margin-top:0.3rem;"></p>
+                </div>
+                <input type="file" id="photo-input" name="photo" accept="image/*" style="display:none;" onchange="showFileName(this)">
+                {% if errors.photo %}
+                    <p class="form-error">⚠ {{ errors.photo }}</p>
+                {% endif %}
+            </div>
 
-        <br><br>
-        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.8rem;">
-            <span data-en>Submit Report</span>
-            <span data-np>रिपोर्ट पेश गर्नुस्</span>
-        </button>
-    </form>
+            <!-- GPS -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span data-en>GPS Location</span>
+                    <span data-np>GPS स्थान</span>
+                    <span style="color:var(--text-light); font-weight:400; font-size:0.82rem; margin-left:0.3rem;">
+                        (<span data-en>optional — shows on map</span><span data-np>ऐच्छिक — नक्सामा देखिन्छ</span>)
+                    </span>
+                </label>
+                <input type="hidden" name="latitude" id="lat">
+                <input type="hidden" name="longitude" id="lng">
+                <button type="button" onclick="getLocation()" class="btn btn-ghost" style="width:100%;">
+                    📍 <span id="loc-text" data-en>Get My Location</span>
+                    <span data-np>मेरो स्थान पत्ता लगाउनुस्</span>
+                </button>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.9rem; font-size:1rem;">
+                <span data-en>Submit Report</span>
+                <span data-np>रिपोर्ट पेश गर्नुस्</span>
+            </button>
+
+        </form>
+    </div>
 </div>
 
 <script>
-// Province change → Districts load
+// Cascading dropdowns
 document.getElementById('province').addEventListener('change', function() {
-    const provinceId = this.value;
-    const districtSelect = document.getElementById('district');
-    const muniSelect = document.getElementById('municipality');
-    const wardSelect = document.getElementById('ward-display');
+    const districtSel = document.getElementById('district');
+    const muniSel = document.getElementById('municipality');
+    const wardSel = document.getElementById('ward-display');
 
-    // Reset tala wala dropdowns
-    districtSelect.innerHTML = '<option value="">-- Select District / जिल्ला छान्नुस् --</option>';
-    muniSelect.innerHTML = '<option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>';
-    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
-    districtSelect.disabled = true;
-    muniSelect.disabled = true;
-    wardSelect.disabled = true;
+    [districtSel, muniSel, wardSel].forEach(s => {
+        s.innerHTML = `<option value="">-- Select --</option>`;
+        s.disabled = true;
+        s.style.opacity = '0.6';
+    });
 
-    if (!provinceId) return;
+    if (!this.value) return;
 
-    fetch(`/api/districts/?province_id=${provinceId}`)
-        .then(res => res.json())
+    fetch(`/api/districts/?province_id=${this.value}`)
+        .then(r => r.json())
         .then(data => {
             data.districts.forEach(d => {
-                districtSelect.innerHTML += `<option value="${d.id}">${d.name} — ${d.name_np}</option>`;
+                districtSel.innerHTML += `<option value="${d.id}">${d.name} — ${d.name_np}</option>`;
             });
-            districtSelect.disabled = false;
+            districtSel.disabled = false;
+            districtSel.style.opacity = '1';
         });
 });
 
-// District change → Municipalities load
 document.getElementById('district').addEventListener('change', function() {
-    const districtId = this.value;
-    const muniSelect = document.getElementById('municipality');
-    const wardSelect = document.getElementById('ward-display');
+    const muniSel = document.getElementById('municipality');
+    const wardSel = document.getElementById('ward-display');
 
-    muniSelect.innerHTML = '<option value="">-- Select Municipality / नगरपालिका छान्नुस् --</option>';
-    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
-    muniSelect.disabled = true;
-    wardSelect.disabled = true;
+    [muniSel, wardSel].forEach(s => {
+        s.innerHTML = `<option value="">-- Select --</option>`;
+        s.disabled = true;
+        s.style.opacity = '0.6';
+    });
 
-    if (!districtId) return;
+    if (!this.value) return;
 
-    fetch(`/api/municipalities/?district_id=${districtId}`)
-        .then(res => res.json())
+    fetch(`/api/municipalities/?district_id=${this.value}`)
+        .then(r => r.json())
         .then(data => {
             data.municipalities.forEach(m => {
-                muniSelect.innerHTML += `<option value="${m.id}">${m.name} — ${m.name_np}</option>`;
+                muniSel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
             });
-            muniSelect.disabled = false;
+            muniSel.disabled = false;
+            muniSel.style.opacity = '1';
         });
 });
 
-// Municipality change → Wards load
 document.getElementById('municipality').addEventListener('change', function() {
-    const muniId = this.value;
-    const wardSelect = document.getElementById('ward-display');
+    const wardSel = document.getElementById('ward-display');
+    wardSel.innerHTML = `<option value="">-- Select Ward --</option>`;
+    wardSel.disabled = true;
+    wardSel.style.opacity = '0.6';
 
-    wardSelect.innerHTML = '<option value="">-- Select Ward / वडा छान्नुस् --</option>';
-    wardSelect.disabled = true;
+    if (!this.value) return;
 
-    if (!muniId) return;
-
-    fetch(`/api/wards/?municipality_id=${muniId}`)
-        .then(res => res.json())
+    fetch(`/api/wards/?municipality_id=${this.value}`)
+        .then(r => r.json())
         .then(data => {
             data.wards.forEach(w => {
-                wardSelect.innerHTML += `<option value="${w.id}">Ward ${w.ward_number} — वडा ${w.ward_number}</option>`;
+                wardSel.innerHTML += `<option value="${w.id}">Ward ${w.ward_number} — वडा ${w.ward_number}</option>`;
             });
-            wardSelect.disabled = false;
+            wardSel.disabled = false;
+            wardSel.style.opacity = '1';
         });
 });
+
+// Photo filename show
+function showFileName(input) {
+    const name = input.files[0]?.name || '';
+    document.getElementById('file-name').textContent = name ? `✓ ${name}` : '';
+}
 
 // GPS
 function getLocation() {
+    const btn = document.getElementById('loc-text');
+    btn.textContent = 'Getting location...';
     navigator.geolocation.getCurrentPosition((pos) => {
         document.getElementById('lat').value = pos.coords.latitude;
         document.getElementById('lng').value = pos.coords.longitude;
-        document.getElementById('loc-status').textContent = '✓ Location captured!';
+        btn.textContent = '✓ Location captured!';
     }, () => {
-        document.getElementById('loc-status').textContent = 'Location access denied.';
+        btn.textContent = 'Location access denied';
     });
 }
 </script>
+
 {% endblock %}

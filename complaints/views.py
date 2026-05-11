@@ -232,7 +232,7 @@ def upvote_complaint(request, complaint_id):
         'upvote_count': upvote_count
         })
 
-def register(request):
+def register_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
